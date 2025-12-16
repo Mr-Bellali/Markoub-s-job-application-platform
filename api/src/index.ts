@@ -1,10 +1,11 @@
-import express from "express"
+import express, {type Express} from "express";
+
 // import routes from "./routes";
 import { config } from 'dotenv';
 config();
 import cors from 'cors';
 
-const app = express()
+const app: Express = express()
 const PORT = 8080;
 
 app.use(cors());

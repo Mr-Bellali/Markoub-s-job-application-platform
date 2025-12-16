@@ -1,4 +1,16 @@
 services:
+  api:
+    container_name: api
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    env_file:
+      - ./api/.env
+    ports:
+      - '8080:8080'
+    depends_on:
+      - postgres
+
   postgres:
     image: pgvector/pgvector:0.8.0-pg16
     environment:
@@ -11,7 +23,7 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U cafe_restaurant_management"]
+      test: ["CMD-SHELL", "pg_isready -U markoub_db"]
       interval: 10s
       timeout: 5s
       retries: 5
