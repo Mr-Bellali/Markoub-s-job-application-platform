@@ -8,8 +8,13 @@ services:
       - ./api/.env
     ports:
       - '8080:8080'
+    volumes:
+      - ./api/src:/app/src
+      - ./api/tsconfig.json:/app/tsconfig.json
     depends_on:
       - postgres
+    networks:
+      - app-network
 
   postgres:
     image: pgvector/pgvector:0.8.0-pg16
