@@ -8,6 +8,27 @@
       "when": 1765963870426,
       "tag": "0000_amused_hulk",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1766000504846,
+      "tag": "0001_same_nighthawk",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1766003509446,
+      "tag": "0002_violet_namor",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1766004331337,
+      "tag": "0003_perfect_grim_reaper",
+      "breakpoints": true
     }
   ]
 }
