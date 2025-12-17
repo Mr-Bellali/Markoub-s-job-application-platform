@@ -1,13 +1,48 @@
 import express from 'express';
 import cors from 'cors';
 import { db } from './config/index';
-
+import setupAdminRoutes from './routes/admins';
+import swaggerJsdoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
 
 const app = express();
 const PORT = 8080;
 
+// Swagger configuration
+const swaggerOptions = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Markoub Jobs API',
+      version: '1.0.0',
+      description: 'API documentation for Markoub Jobs platform',
+    },
+    servers: [
+      {
+        url: `http://localhost:${PORT}`,
+        description: 'Development server',
+      },
+    ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+      },
+    },
+  },
+  apis: ['./src/routes/*.ts', './dist/routes/*.js'],
+};
+
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+
 app.use(cors());
 app.use(express.json());
+
+// Swagger documentation route
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.get('/health', async (_req, res) => {
   try {
@@ -17,6 +52,8 @@ app.get('/health', async (_req, res) => {
     res.status(500).json({ status: 'db not ready' });
   }
 });
+
+app.use(setupAdminRoutes);
 
 app.listen(PORT, () => {
   console.log(`API running on http://localhost:${PORT}`);
