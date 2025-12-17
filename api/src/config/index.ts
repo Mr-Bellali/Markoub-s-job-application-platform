@@ -1,9 +1,4 @@
-import { Pool } from 'pg';
-import { drizzle } from 'drizzle-orm/node-postgres';
+// This file created just to make the importation from /config cleaner in other places of the code
+import db from "./db"
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  max: 10,
-});
-
-export const db = drizzle(pool);
+export {db}
