@@ -161,6 +161,13 @@ setupAdminRoutes.post("/admins", middlewareVerifyAdminJWT(false), async (req: Re
  *           type: integer
  *           default: 10
  *         description: Number of items per page
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [active, deleted, all]
+ *           default: active
+ *         description: Filter admins by status
  *     responses:
  *       200:
  *         description: Successfully retrieved admins list
@@ -203,11 +210,12 @@ setupAdminRoutes.get("/admins", middlewareVerifyAdminJWT(true), async (req: Requ
     try {
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 10;
+        const status = (req.query.status as "active" | "deleted" | "all") || "active";
 
         const adminServices = new AdminServices(db);
 
         // Get the admins from the database
-        const admins = await adminServices.getPaginatedAdmins(page, limit);
+        const admins = await adminServices.getPaginatedAdmins(page, limit, status);
 
         // Return the admins response
         res.json(admins)

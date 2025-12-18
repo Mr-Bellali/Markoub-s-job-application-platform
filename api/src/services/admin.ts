@@ -19,10 +19,15 @@ export default class AdminServices {
     }
 
     // Method to retrieve admins from database
-    async getPaginatedAdmins(page: number = 1, limit: number = 10): Promise<any> {
+    async getPaginatedAdmins(page: number = 1, limit: number = 10, status: "active" | "deleted" | "all" = "active"): Promise<any> {
         try {
             const offset = (page - 1) * limit;
             
+            let whereClause = undefined;
+            if (status !== "all") {
+                whereClause = eq(admins.status, status);
+            }
+
             const result = await this.db.select({
                 id: admins.id,
                 firstName: admins.firstName,
@@ -35,10 +40,11 @@ export default class AdminServices {
                 createdByAdminId: admins.createdByAdminId
             })
             .from(admins)
+            .where(whereClause)
             .limit(limit)
             .offset(offset);
 
-            const total = await this.countAdmins();
+            const total = await this.countAdmins(status);
 
             return {
                 data: result,
@@ -54,9 +60,13 @@ export default class AdminServices {
     }
 
     // Count the admins in the database
-    async countAdmins(): Promise<number> {
+    async countAdmins(status: "active" | "deleted" | "all" = "all"): Promise<number> {
         try {
-            const count = await this.db.$count(admins);
+            let whereClause = undefined;
+            if (status !== "all") {
+                whereClause = eq(admins.status, status);
+            }
+            const count = await this.db.$count(admins, whereClause);
             return count;
         } catch (error) {
             console.error("Error in countAdmins: ", error);
