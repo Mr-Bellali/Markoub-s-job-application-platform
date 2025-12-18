@@ -29,6 +29,9 @@ export default class AdminServices {
                 lastName: admins.lastName,
                 email: admins.email,
                 role: admins.role,
+                status: admins.status,
+                createdAt: admins.createdAt,
+                updatedAt: admins.updatedAt,
                 createdByAdminId: admins.createdByAdminId
             })
             .from(admins)
@@ -75,8 +78,11 @@ export default class AdminServices {
                 id: admins.id,
                 email: admins.email,
                 role: admins.role,
+                status: admins.status,
                 firstName: admins.firstName,
                 lastName: admins.lastName,
+                createdAt: admins.createdAt,
+                updatedAt: admins.updatedAt,
                 createdByAdminId: admins.createdByAdminId
             });
 
@@ -87,8 +93,11 @@ export default class AdminServices {
             return {
                 email: result[0].email!,
                 role: result[0].role!,
+                status: result[0].status!,
                 firstName: result[0].firstName,
                 lastName: result[0].lastName,
+                createdAt: result[0].createdAt,
+                updatedAt: result[0].updatedAt,
                 createdByAdminId: result[0].createdByAdminId
             };
         } catch (error) {

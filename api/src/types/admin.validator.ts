@@ -22,6 +22,9 @@ export const adminResponseSchema = z.object({
     lastName: z.string(),
     email: z.string(),
     role: z.string(),
+    status: z.enum(["active", "deleted"]),
+    createdAt: z.date(),
+    updatedAt: z.date(),
     createdByAdminId: z.number().nullable()
 })
 
