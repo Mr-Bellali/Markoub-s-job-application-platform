@@ -10,7 +10,6 @@ export function middlewareVerifyAdminJWT(required = true) {
 
         // First if the admin table is empty we skip it
         if (await adminServices.countAdmins() === 0) {
-            console.log("No fucking admins");
             return next();
         }
 
