@@ -181,7 +181,13 @@ setupAdminRoutes.post("/admins", middlewareVerifyAdminJWT(false), async (req: Re
  *                       role:
  *                         type: string
  *                         enum: [STANDARD, SUPERADMIN]
+ *                       status:
+ *                         type: string
+ *                         enum: [active, deleted]
  *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                       updatedAt:
  *                         type: string
  *                         format: date-time
  *                 total:
