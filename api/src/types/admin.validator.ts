@@ -17,6 +17,16 @@ export const createAdminSchema = z.object({
     createdByAdminId: z.number().gte(1).optional()
 });
 
+// Update Admin Request Schema
+export const updateAdminSchema = z.object({
+    firstName: z.string().max(60, "First name must be at most 60 characters").optional(),
+    lastName: z.string().max(60, "Last name must be at most 60 characters").optional(),
+    email: z.string()
+        .email("Invalid email format")
+        .max(100, "Email must be at most 100 characters").optional(),
+    role: adminRoleSchema.optional(),
+});
+
 export const adminResponseSchema = z.object({
     firstName: z.string(),
     lastName: z.string(),
@@ -35,6 +45,7 @@ export const loginSchema = z.object({
 
 // Export the inferred types
 export type createAdminInput = z.infer<typeof createAdminSchema>;
+export type updateAdminInput = z.infer<typeof updateAdminSchema>;
 export type adminRole = z.infer<typeof adminRoleSchema>;
 export type adminResponse = z.infer<typeof adminResponseSchema>
 export type login = z.infer<typeof loginSchema>

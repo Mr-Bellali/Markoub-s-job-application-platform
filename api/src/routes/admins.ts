@@ -6,7 +6,7 @@ import {
 import AdminServices from "../services/admin";
 import { db } from "../config";
 import { middlewareVerifyAdminJWT } from "../middlewares/authMiddleware";
-import { createAdminSchema, loginSchema } from "../types/admin.validator";
+import { createAdminSchema, loginSchema, updateAdminSchema } from "../types/admin.validator";
 import { ErrorCodes } from "../common/errors";
 import bcrypt from "bcryptjs";
 import { generateSignedJWT } from "../common/jwt";
@@ -329,4 +329,186 @@ setupAdminRoutes.post("/auth/login", async (req: Request, res: Response) => {
         token
     })
 })
+
+/**
+ * @swagger
+ * /admins/{id}:
+ *   put:
+ *     summary: Update an admin
+ *     description: Updates an existing admin user. Only superadmins can update admins. Password cannot be updated via this endpoint.
+ *     tags:
+ *       - Admins
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Admin ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               firstName:
+ *                 type: string
+ *               lastName:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               role:
+ *                 type: string
+ *                 enum: [STANDARD, SUPERADMIN]
+ *     responses:
+ *       200:
+ *         description: Admin updated successfully
+ *       400:
+ *         description: Bad request - Invalid input data
+ *       401:
+ *         description: Unauthorized - Invalid or missing JWT token
+ *       403:
+ *         description: Forbidden - Only superadmins can update admins
+ *       404:
+ *         description: Admin not found
+ *       500:
+ *         description: Internal server error
+ */
+setupAdminRoutes.put("/admins/:id", middlewareVerifyAdminJWT(true), async (req: Request, res: Response) => {
+    try {
+        const id = parseInt(req.params.id);
+        if (isNaN(id)) {
+            return res.status(400).json({
+                error: "Invalid admin ID",
+                code: ErrorCodes.BadRequest
+            });
+        }
+
+        // Check if the requester is a superadmin
+        const jwtPayload = res.locals.jwtPayload;
+        if (jwtPayload.role !== "superadmin") {
+            return res.status(403).json({
+                error: "Forbidden - Only superadmins can update admins",
+                code: ErrorCodes.Forbidden
+            });
+        }
+
+        // Validate the request body
+        const validatedData = updateAdminSchema.safeParse(req.body);
+        if (validatedData.success === false) {
+            return res.status(400).json({
+                error: validatedData.error.format(),
+                code: ErrorCodes.BadRequest
+            });
+        }
+
+        const adminServices = new AdminServices(db);
+
+        // Update the admin
+        const updatedAdmin = await adminServices.updateAdmin(id, validatedData.data);
+
+        if (!updatedAdmin) {
+            // Check if admin exists but is deleted
+            const existingAdmin = await adminServices.getAdminById(id);
+            if (existingAdmin && existingAdmin.status === 'deleted') {
+                return res.status(400).json({
+                    error: "Cannot update deleted admin",
+                    code: ErrorCodes.BadRequest
+                });
+            }
+
+            return res.status(404).json({
+                error: "Admin not found",
+                code: ErrorCodes.BadRequest
+            });
+        }
+
+        return res.json(updatedAdmin);
+    } catch (error) {
+        console.error("Error in update admin endpoint: ", error);
+        res.status(500).json({
+            error: "Internal server error",
+            code: ErrorCodes.InternalServerError
+        });
+    }
+});
+
+/**
+ * @swagger
+ * /admins/{id}:
+ *   delete:
+ *     summary: Toggle admin status (active/deleted)
+ *     description: Toggles the admin status between 'active' and 'deleted'. Only superadmins can perform this action.
+ *     tags:
+ *       - Admins
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Admin ID
+ *     responses:
+ *       200:
+ *         description: Admin status toggled successfully
+ *       400:
+ *         description: Bad request - Invalid admin ID
+ *       401:
+ *         description: Unauthorized - Invalid or missing JWT token
+ *       403:
+ *         description: Forbidden - Only superadmins can delete admins
+ *       404:
+ *         description: Admin not found
+ *       500:
+ *         description: Internal server error
+ */
+setupAdminRoutes.delete("/admins/:id", middlewareVerifyAdminJWT(true), async (req: Request, res: Response) => {
+    try {
+        const id = parseInt(req.params.id);
+        if (isNaN(id)) {
+            return res.status(400).json({
+                error: "Invalid admin ID",
+                code: ErrorCodes.BadRequest
+            });
+        }
+
+        // Check if the requester is a superadmin
+        const jwtPayload = res.locals.jwtPayload;
+        if (jwtPayload.role !== "superadmin") {
+            return res.status(403).json({
+                error: "Forbidden - Only superadmins can delete admins",
+                code: ErrorCodes.Forbidden
+            });
+        }
+
+        const adminServices = new AdminServices(db);
+
+        // Toggle admin status
+        const newStatus = await adminServices.toggleAdminStatus(id);
+        if (!newStatus) {
+            return res.status(404).json({
+                error: "Admin not found",
+                code: ErrorCodes.BadRequest
+            });
+        }
+
+        return res.json({
+            message: `Admin status changed to ${newStatus}`,
+            status: newStatus
+        });
+    } catch (error) {
+        console.error("Error in delete admin endpoint: ", error);
+        res.status(500).json({
+            error: "Internal server error",
+            code: ErrorCodes.InternalServerError
+        });
+    }
+});
+
 export default setupAdminRoutes;
