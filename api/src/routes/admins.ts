@@ -193,14 +193,25 @@ setupAdminRoutes.post("/admins", middlewareVerifyAdminJWT(false), async (req: Re
  *       500:
  *         description: Internal server error
  */
-setupAdminRoutes.get("/admins", async (req: Request, res: Response) => {
-    const adminServices = new AdminServices(db);
+setupAdminRoutes.get("/admins", middlewareVerifyAdminJWT(true), async (req: Request, res: Response) => {
+    try {
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
 
-    // Get the admins from the database
-    const admins = await adminServices.getPaginatedAdmins();
+        const adminServices = new AdminServices(db);
 
-    // Return the admins response
-    res.json(admins)
+        // Get the admins from the database
+        const admins = await adminServices.getPaginatedAdmins(page, limit);
+
+        // Return the admins response
+        res.json(admins)
+    } catch (error) {
+        console.error("Error in get admins endpoint: ", error)
+        res.status(500).json({
+            error: "Internal server error",
+            code: ErrorCodes.InternalServerError
+        });
+    }
 })
 
 // Login route

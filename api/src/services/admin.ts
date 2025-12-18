@@ -19,10 +19,31 @@ export default class AdminServices {
     }
 
     // Method to retrieve admins from database
-    async getPaginatedAdmins(): Promise<any> {
+    async getPaginatedAdmins(page: number = 1, limit: number = 10): Promise<any> {
         try {
-            const result = await this.db.select().from(admins);
-            return result;
+            const offset = (page - 1) * limit;
+            
+            const result = await this.db.select({
+                id: admins.id,
+                firstName: admins.firstName,
+                lastName: admins.lastName,
+                email: admins.email,
+                role: admins.role,
+                createdByAdminId: admins.createdByAdminId
+            })
+            .from(admins)
+            .limit(limit)
+            .offset(offset);
+
+            const total = await this.countAdmins();
+
+            return {
+                data: result,
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit)
+            };
         } catch (error) {
             console.error('Error in getPaginatedAdmins: ', error);
             throw error;
