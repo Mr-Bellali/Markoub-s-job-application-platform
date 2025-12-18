@@ -4,6 +4,7 @@ export const ErrorCodes = {
 
     // Generic
     Unauthorized: 'unauthorized',
+    Forbidden: 'forbidden',
     BadRequest: 'bad_request',
     InternalServerError: 'internal_server_error',
   } as const 
