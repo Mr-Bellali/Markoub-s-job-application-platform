@@ -7,4 +7,5 @@ export const ErrorCodes = {
     Forbidden: 'forbidden',
     BadRequest: 'bad_request',
     InternalServerError: 'internal_server_error',
+    AlreadyExist: 'already_exist'
   } as const 

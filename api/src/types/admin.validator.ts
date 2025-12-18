@@ -25,7 +25,13 @@ export const adminResponseSchema = z.object({
     createdByAdminId: z.number().nullable()
 })
 
+export const loginSchema = z.object({
+    email: z.string().email(),
+    password: z.string().min(8)
+})
+
 // Export the inferred types
 export type createAdminInput = z.infer<typeof createAdminSchema>;
 export type adminRole = z.infer<typeof adminRoleSchema>;
 export type adminResponse = z.infer<typeof adminResponseSchema>
+export type login = z.infer<typeof loginSchema>

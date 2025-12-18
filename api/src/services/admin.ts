@@ -2,7 +2,8 @@ import { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import { admins } from "../db/schema/admins";
 import * as schema from '../db/schema/admins';
-import { adminResponse, createAdminInput } from "../types/admin.validator"
+import { adminResponse, createAdminInput, adminRole } from "../types/admin.validator"
+import { eq } from "drizzle-orm";
 
 export default class AdminServices {
     // Class attributes
@@ -18,7 +19,7 @@ export default class AdminServices {
     }
 
     // Method to retrieve admins from database
-    async getPaginatedAdmins(): Promise<any>{
+    async getPaginatedAdmins(): Promise<any> {
         try {
             const result = await this.db.select().from(admins);
             return result;
@@ -29,7 +30,7 @@ export default class AdminServices {
     }
 
     // Count the admins in the database
-    async countAdmins(): Promise<number>{
+    async countAdmins(): Promise<number> {
         try {
             const count = await this.db.$count(admins);
             return count;
@@ -40,7 +41,14 @@ export default class AdminServices {
     }
 
     // Create a new admin
-    async createAdmin(data: createAdminInput): Promise<adminResponse>{
+    async createAdmin(data: {
+        firstName: string,
+        lastName: string,
+        email: string,
+        hashedPassword: string,
+        role: adminRole,
+        createdByAdminId?: number | null
+    }): Promise<adminResponse> {
         try {
             const result = await this.db.insert(admins).values(data).returning({
                 id: admins.id,
@@ -50,11 +58,11 @@ export default class AdminServices {
                 lastName: admins.lastName,
                 createdByAdminId: admins.createdByAdminId
             });
-            
+
             if (!result[0]) {
                 throw new Error("Failed to create admin");
             }
-            
+
             return {
                 email: result[0].email!,
                 role: result[0].role!,
@@ -67,4 +75,18 @@ export default class AdminServices {
             throw error;
         }
     }
+
+    // Get admin by email
+    async getAdminByEmail(email: string): Promise<any> {
+        try {
+            const result = await this.db.query.admins.findFirst({
+                where: eq(admins.email, email)
+            });
+            return result;
+        } catch (error) {
+            console.log('Error in getAdminByEmail: ', error);
+            throw error;
+        }
+    }
+
 }

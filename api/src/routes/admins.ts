@@ -6,9 +6,10 @@ import {
 import AdminServices from "../services/admin";
 import { db } from "../config";
 import { middlewareVerifyAdminJWT } from "../middlewares/authMiddleware";
-import { createAdminSchema } from "../types/admin.validator";
+import { createAdminSchema, loginSchema } from "../types/admin.validator";
 import { ErrorCodes } from "../common/errors";
 import bcrypt from "bcryptjs";
+import { generateSignedJWT } from "../common/jwt";
 
 // Create the routes for the admins
 const setupAdminRoutes = Router();
@@ -59,53 +60,82 @@ const setupAdminRoutes = Router();
  *       400:
  *         description: Bad request - Invalid input data
  */
-setupAdminRoutes.post("/admins", middlewareVerifyAdminJWT(false), async(req: Request, res: Response) => {
+setupAdminRoutes.post("/admins", middlewareVerifyAdminJWT(false), async (req: Request, res: Response) => {
     try {
         // Validate the request body using Zod
         const validatedData = createAdminSchema.safeParse(req.body);
-        if (validatedData.success === false){
+        if (validatedData.success === false) {
             return res.status(400).json({
                 error: validatedData.error.format(),
                 code: ErrorCodes.BadRequest
             });
         }
 
-        // Get all the data from the body
-        const {email, role, firstName, lastName, password} = validatedData.data;
+        // Destruct all the data fro validated data
+        const { email, role, firstName, lastName, password } = validatedData.data;
 
         // Get the count of the admins
         const adminServices = new AdminServices(db);
         const adminCount = await adminServices.countAdmins();
 
-        if(adminCount === 0) {
+        if (adminCount === 0) {
             const hash = await bcrypt.hash(password, 10);
 
-            // Create the first admin account in the database
+            // Create the first admin account in the database - always superadmin
             const account = await adminServices.createAdmin({
                 firstName,
                 lastName,
                 email,
-                password: hash,
-                role: role? role : "superadmin"
+                hashedPassword: hash,
+                role: "superadmin"
             });
 
-            res.status(201).json(account);
+            return res.status(201).json(account);
+        }
+        // Otherwise we check the jwt and see if the connected account is a superadmin 
+        // First we will get the payload stored
+        const jwtPayload = res.locals.jwtPayload;
+
+        if (!jwtPayload) {
+            return res.status(401).json({
+                error: "Unauthorized",
+                code: ErrorCodes.Unauthorized
+            });
         }
 
-        res.status(201).json({
-            message: "Admin validation successful",
-            data: {
-                // email: validatedData.email,
-                // role: validatedData.role,
-                // firstName: validatedData.firstName,
-                // lastName: validatedData.lastName
-            }
+        if (jwtPayload.role !== "superadmin") {
+            return res.status(403).json({
+                error: "Forbidden - Only superadmins can create new admins",
+                code: ErrorCodes.Forbidden
+            });
+        }
+
+        // Check if admin already exists
+        const existingAdmin = await adminServices.getAdminByEmail(email);
+        if (existingAdmin) {
+            return res.status(409).json({
+                error: "Admin with this email already exists",
+                code: ErrorCodes.AlreadyExist
+            });
+        }
+
+        const hash = await bcrypt.hash(password, 10);
+
+        const account = await adminServices.createAdmin({
+            firstName,
+            lastName,
+            email,
+            hashedPassword: hash,
+            role: role as "standard" | "superadmin",
+            createdByAdminId: jwtPayload.sub ? parseInt(jwtPayload.sub) : null
         });
+
+        return res.status(201).json(account);
     } catch (error) {
         console.error("Error in create admin endpoint: ", error)
         res.status(500).json({
             error: "Internal server error",
-            code: ErrorCodes.InternalServerError 
+            code: ErrorCodes.InternalServerError
         });
     }
 })
@@ -173,4 +203,105 @@ setupAdminRoutes.get("/admins", async (req: Request, res: Response) => {
     res.json(admins)
 })
 
+// Login route
+/**
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     summary: Admin login
+ *     description: Authenticates an admin user and returns a JWT token
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: admin@example.com
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 example: securePassword123
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                   description: JWT access token
+ *                 admin:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *                       enum: [STANDARD, SUPERADMIN]
+ *       400:
+ *         description: Bad request - Invalid input data
+ *       401:
+ *         description: Unauthorized - Invalid credentials
+ *       500:
+ *         description: Internal server error
+ */
+setupAdminRoutes.post("/auth/login", async (req: Request, res: Response) => {
+    // Get the requested data
+    const validateData = loginSchema.safeParse(req.body);
+    if (validateData.success === false) {
+        return res.status(400).json({
+            error: validateData.error.format(),
+            code: ErrorCodes.BadRequest
+        });
+    }
+
+    // Destruct all the data fro validated data
+    const { email, password } = validateData.data;
+
+    // Check if the admin exist in the database first
+    const adminServices = new AdminServices(db);
+    const admin = await adminServices.getAdminByEmail(email);
+    if (!admin) {
+        return res.status(400).json({
+            error: 'Incorrect Email or password',
+            code: ErrorCodes.BadRequest
+        });
+    }
+
+    // Check if the password is valid
+    const validPassword = await bcrypt.compare(password, admin.hashedPassword);
+    if (!validPassword) {
+        return res.status(400).json({
+            error: 'Incorrect Email or password',
+            code: ErrorCodes.BadRequest
+        });
+    }
+
+    // Generate a JWT token
+    const token = await generateSignedJWT({
+        ...admin,
+        hashedPassword: null
+    })
+
+    return res.json({
+        account: {
+            ...admin,
+            hashedPassword: null
+        },
+        token
+    })
+})
 export default setupAdminRoutes;
