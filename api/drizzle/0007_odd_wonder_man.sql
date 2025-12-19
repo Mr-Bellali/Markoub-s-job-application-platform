@@ -1,0 +1,1 @@
+ALTER TABLE "positions" ADD COLUMN "status" "status" DEFAULT 'active';
