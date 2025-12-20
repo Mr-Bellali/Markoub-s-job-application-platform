@@ -17,7 +17,7 @@ import { positions } from "./positions";
 // Candidate schema
 export const candidates = pgTable('candidates',{
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    fullName: varchar('full_name', {length: 60}).notNull(),
+    fullName: varchar('full_name', {length: 180}).notNull(),
     email: varchar('email', {length: 100}).unique().notNull(),
     aliases: varchar('aliases') // This will store the other names for the candidate if he applied for another position with different name but same email
     // It will store the names separated by , (eg. "Hamid Alauoi, Hicham Lgarouj...") 
