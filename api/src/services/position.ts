@@ -22,7 +22,7 @@ export default class PositionServices {
     async getPaginatedPositions(page: number = 1, limit: number = 10, category?: string): Promise<any> {
         try {
             const offset = (page - 1) * limit;
-            
+
             let whereClause: SQL | undefined = eq(positions.status, 'active');
             if (category) {
                 whereClause = and(whereClause, eq(positions.category, category));
@@ -37,11 +37,11 @@ export default class PositionServices {
                 createdAt: positions.createdAt,
                 updatedAt: positions.updatedAt
             })
-            .from(positions)
-            .where(whereClause)
-            .limit(limit)
-            .offset(offset)
-            .orderBy(desc(positions.createdAt));
+                .from(positions)
+                .where(whereClause)
+                .limit(limit)
+                .offset(offset)
+                .orderBy(desc(positions.createdAt));
 
             const total = await this.countPositions(category);
 
@@ -89,9 +89,9 @@ export default class PositionServices {
                 createdAt: positions.createdAt,
                 updatedAt: positions.updatedAt
             })
-            .from(positions)
-            .where(and(eq(positions.id, id), eq(positions.status, 'active')))
-            .limit(1);
+                .from(positions)
+                .where(and(eq(positions.id, id), eq(positions.status, 'active')))
+                .limit(1);
 
             if (!result[0]) return undefined;
 
@@ -106,9 +106,12 @@ export default class PositionServices {
     }
 
     // Create a new position
-    async createPosition(data: createPositionInput): Promise<positionDetailResponse> {
+    async createPosition(data: createPositionInput, createdByAdminId: number): Promise<positionDetailResponse> {
         try {
-            const result = await this.db.insert(positions).values(data).returning({
+            const result = await this.db.insert(positions).values({
+                ...data,
+                createdByAdminId
+            }).returning({
                 id: positions.id,
                 title: positions.title,
                 category: positions.category,
@@ -169,7 +172,7 @@ export default class PositionServices {
                 .set({ status: "deleted" })
                 .where(and(eq(positions.id, id), eq(positions.status, 'active')))
                 .returning({ id: positions.id });
-            
+
             return result.length > 0;
         } catch (error) {
             console.error("Error in softDeletePosition: ", error);
