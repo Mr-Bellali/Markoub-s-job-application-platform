@@ -204,6 +204,57 @@ setupPositionRoutes.get("/positions/:id", async (req: Request, res: Response) =>
     }
 })
 
+/**
+ * @swagger
+ * /positions/{id}/apply:
+ *   post:
+ *     summary: Apply to a position
+ *     description: Submit a job application for a specific position with a resume file (PDF only).
+ *     tags:
+ *       - Positions
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Position ID to apply for
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - fullName
+ *               - email
+ *               - fileB64
+ *               - fileName
+ *             properties:
+ *               fullName:
+ *                 type: string
+ *                 description: Full name of the applicant
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: Email address of the applicant
+ *               fileB64:
+ *                 type: string
+ *                 format: byte
+ *                 description: Base64 encoded PDF file (resume)
+ *               fileName:
+ *                 type: string
+ *                 description: Original filename of the uploaded file
+ *     responses:
+ *       201:
+ *         description: Application submitted successfully
+ *       400:
+ *         description: Bad request - Invalid input data, invalid file type, or file too large
+ *       404:
+ *         description: Position not found
+ *       500:
+ *         description: Internal server error
+ */
 // Endpoint for users to apply for a position
 setupPositionRoutes.post("/positions/:id/apply", async (req: Request, res: Response) => {
     try {
