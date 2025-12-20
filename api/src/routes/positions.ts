@@ -1,9 +1,13 @@
 import { Router, Request, Response } from "express";
+import { fileTypeFromBuffer } from 'file-type';
 import { middlewareVerifyAdminJWT } from "../middlewares/authMiddleware";
 import { createPositionSchema } from "../types/position.validator";
 import { ErrorCodes } from "../common/errors";
 import PositionServices from "../services/position";
 import { db } from "../config";
+import { createApplicationSchema } from "../types/application.validator";
+import ApplicationServices from "../services/applications";
+import MediaServices from "../services/mediaServices";
 
 // Create route for positions
 const setupPositionRoutes = Router();
@@ -200,6 +204,95 @@ setupPositionRoutes.get("/positions/:id", async (req: Request, res: Response) =>
     }
 })
 
+// Endpoint for users to apply for a position
+setupPositionRoutes.post("/positions/:id/apply", async (req: Request, res: Response) => {
+    try {
+        // First we get the position ID
+        const positionId = parseInt(req.params.id);
+        if (isNaN(positionId)) {
+            return res.status(400).json({
+                error: "Invalid position ID it should be a valid integer",
+                code: ErrorCodes.BadRequest
+            });
+        }
+
+        // We check if the position exist so we wont create upload a pdf for a none existing position
+        const positionServices = new PositionServices(db as any);
+        const existingPosition = await positionServices.getPositionById(positionId);
+        if(!existingPosition){
+            return res.status(404).json({
+                error: "Position not found",
+                code: ErrorCodes.NotFound
+            })
+        }
+
+        // Validate the requested body data
+        const validateData = createApplicationSchema.safeParse(req.body);
+        if (validateData.success === false) {
+            return res.status(400).json({
+                error: validateData.error.format(),
+                code: ErrorCodes.BadRequest
+            });
+        }
+
+        // Destruct the data
+        const { fullName, email, fileB64, fileName } = validateData.data;
+
+        // Validate file size
+
+        const decoded = Buffer.from(fileB64, "base64");
+        const mediaServices = new MediaServices();
+        if (decoded.length > mediaServices.getMaxFileSize()) {
+            console.error("File is too large");
+            return res.status(400).json({
+                error: `File is larger than ${mediaServices.getMaxFileSize()}`,
+                code: ErrorCodes.BadRequest
+            });
+        }
+
+        // Detect the file type
+        const type = await fileTypeFromBuffer(decoded);
+
+        if (!type) {
+            return res.status(400).json({
+                error: "Could not detect file type",
+                code: ErrorCodes.BadRequest
+            });
+        }
+
+        const allowedMimes = mediaServices.getAllowedMimeTypes();
+        if (!allowedMimes.includes(type.mime)) {
+            return res.status(400).json({
+                error: "Invalid file type. Only PDF is allowed.",
+                code: ErrorCodes.BadRequest
+            });
+        }
+
+        // Upload file to s3 bucket
+        const filePath = `${Date.now()}_${fileName}`;
+        await mediaServices.uploadFileToBucket(decoded, filePath, type.mime);
+
+        // Create the application for the user
+        const applicationServices = new ApplicationServices(db as any);
+
+        const application = await applicationServices.createApplication({
+            positionId,
+            fullName,
+            email,
+            fileName,
+            filePath
+        });
+
+        return res.status(201).json(application);
+
+    } catch (error: any) {
+        console.error("Error in the endpoint of applying to a position: ", error)
+        return res.status(500).json({
+            error: "Failed to upload resume",
+            code: ErrorCodes.InternalServerError
+        });
+    }
+})
 
 // Endpoint to update a position by admin
 
