@@ -57,6 +57,13 @@
       "when": 1766101999961,
       "tag": "0007_odd_wonder_man",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1766243474063,
+      "tag": "0008_fantastic_metal_master",
+      "breakpoints": true
     }
   ]
 }

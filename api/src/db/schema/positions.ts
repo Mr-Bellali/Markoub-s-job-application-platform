@@ -5,7 +5,9 @@ import {
   pgEnum,
   timestamp
 } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { statusEnum } from "./admins";
+import { applications } from "./applications";
 
 // position status
 
@@ -25,3 +27,7 @@ export const positions = pgTable('positions', {
   createdByAdminId: integer().notNull(),
   status: statusEnum().default("active"),
 })
+
+export const positionsRelations = relations(positions, ({ many }) => ({
+    applications: many(applications),
+}));
