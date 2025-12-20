@@ -1,0 +1,59 @@
+services:
+  api:
+    container_name: api
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    env_file:
+      - ./api/.env
+    ports:
+      - '8080:8080'
+    volumes:
+      - ./api/src:/app/src
+      - ./api/tsconfig.json:/app/tsconfig.json
+    depends_on:
+      - postgres
+    networks:
+      - app-network
+
+  postgres:
+    image: pgvector/pgvector:0.8.0-pg16
+    environment:
+      POSTGRES_DB: markoub_db
+      POSTGRES_USER: markoub_db
+    env_file:
+      - .env.postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U markoub_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+    networks:
+      - app-network
+
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=s3
+      - AWS_DEFAULT_REGION=us-east-1
+      - DEBUG=1
+    volumes:
+      - ./localstack:/var/lib/localstack
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

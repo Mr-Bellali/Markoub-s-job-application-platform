@@ -1,0 +1,1 @@
+ALTER TABLE "positions" ADD COLUMN "createdByAdminId" integer NOT NULL;

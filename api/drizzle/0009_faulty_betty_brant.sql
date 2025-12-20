@@ -1,0 +1,1 @@
+ALTER TABLE "candidates" ALTER COLUMN "full_name" SET DATA TYPE varchar(180);
