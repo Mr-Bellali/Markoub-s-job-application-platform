@@ -144,6 +144,8 @@ setupAdminRoutes.post("/admins", middlewareVerifyAdminJWT(false), async (req: Re
  *     description: Retrieves a paginated list of all admin users in the system
  *     tags:
  *       - Admins
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: page
