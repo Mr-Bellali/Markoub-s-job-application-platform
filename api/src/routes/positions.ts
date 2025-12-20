@@ -8,6 +8,51 @@ import { db } from "../config";
 // Create route for positions
 const setupPositionRoutes = Router();
 
+/**
+ * @swagger
+ * /positions:
+ *   post:
+ *     summary: Create a new position
+ *     description: Creates a new job position. Only superadmins can create positions.
+ *     tags:
+ *       - Positions
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - category
+ *               - description
+ *             properties:
+ *               title:
+ *                 type: string
+ *               category:
+ *                 type: string
+ *               workType:
+ *                 type: string
+ *                 enum: [remote, hybrid, onsite, freelancer]
+ *                 default: onsite
+ *               location:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Position created successfully
+ *       400:
+ *         description: Bad request - Invalid input data
+ *       401:
+ *         description: Unauthorized - Invalid or missing JWT token
+ *       403:
+ *         description: Forbidden - Insufficient permissions
+ *       500:
+ *         description: Internal server error
+ */
 // First we will have endpoint to create positions by admins
 setupPositionRoutes.post("/positions", middlewareVerifyAdminJWT(true), async (req: Request, res: Response) => {
     try {
@@ -42,6 +87,38 @@ setupPositionRoutes.post("/positions", middlewareVerifyAdminJWT(true), async (re
     }
 });
 
+/**
+ * @swagger
+ * /positions:
+ *   get:
+ *     summary: Get paginated list of positions
+ *     description: Retrieves a paginated list of all active positions. Can be filtered by category.
+ *     tags:
+ *       - Positions
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of items per page
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *         description: Filter positions by category
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved positions list
+ *       500:
+ *         description: Internal server error
+ */
 // Endpoint to get all the positions paginated
 setupPositionRoutes.get("/positions", async (req: Request, res: Response) => {
     try {
@@ -64,6 +141,31 @@ setupPositionRoutes.get("/positions", async (req: Request, res: Response) => {
     }
 });
 
+/**
+ * @swagger
+ * /positions/{id}:
+ *   get:
+ *     summary: Get a position by ID
+ *     description: Retrieves detailed information about a specific position.
+ *     tags:
+ *       - Positions
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Position ID
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved position details
+ *       400:
+ *         description: Bad request - Invalid position ID
+ *       404:
+ *         description: Position not found
+ *       500:
+ *         description: Internal server error
+ */
 // Get a detailed position by ID
 setupPositionRoutes.get("/positions/:id", async (req: Request, res: Response) => {
     try {
