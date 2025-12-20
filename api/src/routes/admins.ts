@@ -1,8 +1,4 @@
-import {
-    Router,
-    type Request,
-    type Response,
-} from "express";
+import { Router, Request, Response } from "express";
 import AdminServices from "../services/admin";
 import { db } from "../config";
 import { middlewareVerifyAdminJWT } from "../middlewares/authMiddleware";
