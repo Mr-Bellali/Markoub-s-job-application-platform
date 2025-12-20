@@ -10,7 +10,6 @@ export const createPositionSchema = z.object({
     workType: workTypeSchema.optional().default("onsite"),
     location: z.string().max(255).optional(),
     description: z.string().min(1, "Description is required"),
-    createdByAdminId: z.number().int().positive()
 });
 
 // Update Position Request Schema
