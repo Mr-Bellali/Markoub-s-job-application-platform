@@ -4,6 +4,7 @@ import { db } from './config/index';
 import setupAdminRoutes from './routes/admins';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
+import setupPositionRoutes from './routes/positions';
 
 const app = express();
 const PORT = 8080;
@@ -53,7 +54,9 @@ app.get('/health', async (_req, res) => {
   }
 });
 
+// All the app routes setup
 app.use(setupAdminRoutes);
+app.use(setupPositionRoutes);
 
 app.listen(PORT, () => {
   console.log(`API running on http://localhost:${PORT}`);
