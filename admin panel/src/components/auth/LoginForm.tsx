@@ -1,9 +1,13 @@
 
-const LoginForm = () => {
+interface LoginFormProps {
+  onCreateAccount: () => void;
+}
+
+const LoginForm = ({ onCreateAccount }: LoginFormProps) => {
   return (
-    <div className="flex flex-col items-start w-full gap-10">
+    <section className="flex flex-col items-start w-full gap-10">
       {/* Title */}
-      <p className="text-6xl font-bold">Login</p>
+      <h1 className="text-6xl font-bold w-full flex items-center justify-center">Login</h1>
 
       <form className="flex flex-col items-start w-full" >
         <label htmlFor="email" >Email</label>
@@ -25,9 +29,9 @@ const LoginForm = () => {
         </button>
       </form>
       <p className="text-sm text-gray-400">
-        Not registered? <span className="text-[#ff6804] cursor-pointer">Create a new account</span>
+        Not registered? <span className="text-[#ff6804] cursor-pointer" onClick={onCreateAccount}>create a new account</span>
       </p>
-    </div>
+    </section>
   )
 }
 
