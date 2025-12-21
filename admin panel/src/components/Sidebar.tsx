@@ -61,7 +61,7 @@ const Sidebar = () => {
                   }`}>
                     <Icon size={22} className={isActive ? 'text-[#ff6804]' : 'text-gray-400 group-hover:text-[#ff6804]'} />
                   </div>
-                  <span className="font-medium text-[15px]">{item.label}</span>
+                  <span className={`font-medium text-[15px] ${isActive && "text-white"}`}>{item.label}</span>
                 </>
               )}
             </NavLink>
