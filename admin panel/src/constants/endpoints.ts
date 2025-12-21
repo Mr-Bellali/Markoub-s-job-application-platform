@@ -3,7 +3,10 @@ export const API_ENDPOINTS = {
     LOGIN: '/auth/login',
 
     // Positions endpoint
-    POSITIONS: '/positions'
+    POSITIONS: '/positions',
+
+    // Admins endpoint
+    ADMINS: '/admins'
 
 } as const;
 
