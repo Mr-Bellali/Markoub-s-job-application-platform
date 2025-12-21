@@ -4,7 +4,7 @@ import { useMutation } from '@tanstack/react-query';
 import { Eye, EyeOff, Loader } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
-import { loginUser } from '../../services/auth';
+import { loginAdmin } from '../../services/auth';
 import { loginSchema } from '../../types/auth.validator';
 
 interface LoginFormProps {
@@ -18,7 +18,7 @@ const LoginForm = ({ onCreateAccount }: LoginFormProps) => {
   const [showPassword, setShowPassword] = useState(false);
 
   const loginMutation = useMutation({
-    mutationFn: loginUser,
+    mutationFn: loginAdmin,
     onSuccess: (data) => {
       toast.success(`Welcome back, ${data.account.firstName}!`);
       login(data.token, data.account);
