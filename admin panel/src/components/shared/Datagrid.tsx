@@ -1,44 +1,80 @@
 import React from 'react'
 
-interface DataGridProps {
-  data: any,
+export interface Column<T = any> {
+  key: string;
+  header: string;
+  render?: (row: T) => React.ReactNode;
+  width?: string;
 }
 
-const DataGrid = ({ data }: DataGridProps) => {
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const day = date.getDate();
-    const month = date.toLocaleString('en-US', { month: 'short' });
-    const year = date.getFullYear();
-    return `${day} ${month} ${year}`;
-  };
+interface DataGridProps<T = any> {
+  data: T[];
+  columns: Column<T>[];
+  onRowClick?: (row: T) => void;
+}
 
+const DataGrid = <T extends { id: number | string }>({ 
+  data, 
+  columns, 
+  onRowClick 
+}: DataGridProps<T>) => {
   return (
     <div className='w-full h-full flex justify-center items-center'>
       <div className='w-full rounded-xl overflow-hidden border border-gray-300 bg-white'>
         <table className='w-full border-collapse'>
           <thead>
             <tr className='w-full h-12 bg-[#ff6804] text-white'>
-              <th className='pl-3 text-start border-r border-b border-gray-300'>Title</th>
-              <th className='pl-3 text-start border-r border-b border-gray-300'>Category</th>
-              <th className='pl-3 text-start border-r border-b border-gray-300'>Work type</th>
-              <th className='pl-3 text-start border-r border-b border-gray-300'>Location</th>
-              <th className='pl-3 text-start border-b border-gray-300'>Creation date</th>
+              {columns.map((column, index) => (
+                <th 
+                  key={column.key}
+                  className={`pl-3 text-start border-b border-gray-300 ${
+                    index < columns.length - 1 ? 'border-r' : ''
+                  }`}
+                  style={{ width: column.width }}
+                >
+                  {column.header}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
-            {data.map((position: any, index: number) => {
-              const isLastRow = index === data.length - 1;
-              return (
-                <tr key={position.id} className='hover:bg-gray-50 transition-colors'>
-                  <td className={`pl-3 py-3 border-r ${!isLastRow ? 'border-b' : ''} border-gray-300`}>{position.title}</td>
-                  <td className={`pl-3 py-3 border-r ${!isLastRow ? 'border-b' : ''} border-gray-300`}>{position.category}</td>
-                  <td className={`pl-3 py-3 border-r ${!isLastRow ? 'border-b' : ''} border-gray-300`}>{position.workType}</td>
-                  <td className={`pl-3 py-3 border-r ${!isLastRow ? 'border-b' : ''} border-gray-300`}>{position.location || 'N/A'}</td>
-                  <td className={`pl-3 py-3 ${!isLastRow ? 'border-b' : ''} border-gray-300`}>{formatDate(position.createdAt)}</td>
-                </tr>
-              )
-            })}
+            {data.length === 0 ? (
+              <tr>
+                <td 
+                  colSpan={columns.length} 
+                  className="text-center py-8 text-gray-500"
+                >
+                  No data available
+                </td>
+              </tr>
+            ) : (
+              data.map((row, rowIndex) => {
+                const isLastRow = rowIndex === data.length - 1;
+                return (
+                  <tr 
+                    key={row.id} 
+                    onClick={() => onRowClick?.(row)}
+                    className={`transition-colors ${
+                      onRowClick ? 'hover:bg-gray-50 cursor-pointer' : 'hover:bg-gray-50'
+                    }`}
+                  >
+                    {columns.map((column, colIndex) => (
+                      <td 
+                        key={column.key}
+                        className={`pl-3 py-3 ${
+                          colIndex < columns.length - 1 ? 'border-r' : ''
+                        } ${!isLastRow ? 'border-b' : ''} border-gray-300`}
+                      >
+                        {column.render 
+                          ? column.render(row) 
+                          : (row as any)[column.key]
+                        }
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>

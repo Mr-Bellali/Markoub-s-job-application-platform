@@ -1,8 +1,8 @@
-import { Plus, Search } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getPaginatedPositions } from '../services/positions';
-import DataGrid from '../components/shared/Datagrid';
+import DataGrid, { type Column } from '../components/shared/Datagrid';
 import Breadcrumb from '../components/shared/Breadcrumb';
 import Pagination from '../components/shared/Pagination';
 
@@ -23,6 +23,30 @@ const Positions = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [limit] = useState(10);
+
+  const formatDate = (dateString: Date) => {
+    const date = new Date(dateString);
+    const day = date.getDate();
+    const month = date.toLocaleString('en-US', { month: 'short' });
+    const year = date.getFullYear();
+    return `${day} ${month} ${year}`;
+  };
+
+  const columns: Column<Position>[] = [
+    { key: 'title', header: 'Title' },
+    { key: 'category', header: 'Category' },
+    { key: 'workType', header: 'Work type' },
+    { 
+      key: 'location', 
+      header: 'Location',
+      render: (position) => position.location || 'N/A'
+    },
+    { 
+      key: 'createdAt', 
+      header: 'Creation date',
+      render: (position) => formatDate(position.createdAt)
+    },
+  ];
 
   const fetchPositions = async (page: number = 1) => {
     try {
@@ -78,7 +102,7 @@ const Positions = () => {
           Create Position
         </button>
       </div>
-      <DataGrid data={positions} />
+      <DataGrid data={positions} columns={columns} />
       {totalPages > 0 && (
         <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2">
           <Pagination
