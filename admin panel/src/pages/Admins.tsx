@@ -162,7 +162,7 @@ const Admins = () => {
         onRowClick={handleRowClick}
       />
 
-      {totalPages > 1 && (
+      {totalPages > 0 && (
         <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2">
           <Pagination
             currentPage={currentPage}
