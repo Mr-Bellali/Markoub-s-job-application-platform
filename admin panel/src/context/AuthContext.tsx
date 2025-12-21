@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect,type  ReactNode } from 'react';
-import type { Account } from '../services/auth';
+import type { Account } from '../types/auth.validator';
 
 interface AuthContextType {
   token: string | null;
