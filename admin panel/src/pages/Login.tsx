@@ -1,15 +1,24 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogIn, Mail, Lock } from 'lucide-react';
 import MarkoubImage from '../assets/Markoub.png';
 import LoginForm from '../components/auth/LoginForm';
 import CreateFirstAdminForm from '../components/auth/CreateFirstAdminForm';
+import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
     const navigate = useNavigate();
+    const { isAuthenticated } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+
+    // Redirect to dashboard if already authenticated
+    useEffect(() => {
+        if (isAuthenticated) {
+            navigate('/dashboard');
+        }
+    }, [isAuthenticated, navigate]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
