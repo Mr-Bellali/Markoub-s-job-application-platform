@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { loginUser } from '../../services/auth';
 
@@ -76,10 +76,10 @@ const LoginForm = ({ onCreateAccount }: LoginFormProps) => {
         </div>
 
         <button type="submit"
-          className="w-full p-4 bg-[#ff6804] rounded-xl font-bold text-xl text-white cursor-pointer hover:bg-orange-400 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full p-4 bg-[#ff6804] rounded-xl font-bold text-xl text-white cursor-pointer hover:bg-orange-400 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           disabled={loginMutation.isPending}
         >
-          {loginMutation.isPending ? 'Logging in...' : 'Login'}
+          {loginMutation.isPending ? <Loader className="animate-spin" size={24} /> : 'Login'}
         </button>
       </form>
       <p className="text-sm text-gray-400">
