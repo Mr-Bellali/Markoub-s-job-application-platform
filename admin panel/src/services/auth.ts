@@ -1,10 +1,6 @@
 import { API_ENDPOINTS } from '../constants/endpoints';
 import { api } from './api';
-
-interface LoginCredentials {
-  email: string;
-  password: string;
-}
+import type { LoginCredentials } from '../types/auth.validator';
 
 export interface Account {
   id: number;
