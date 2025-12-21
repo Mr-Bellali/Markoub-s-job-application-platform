@@ -11,15 +11,20 @@ import { useAuth } from '../context/AuthContext';
 import LOGO from "../assets/logo.webp"
 
 const Sidebar = () => {
-  const { logout } = useAuth();
+  const { logout, account } = useAuth();
 
   const navItems = [
     { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/positions', label: 'Positions', icon: Briefcase },
     { path: '/candidats', label: 'Candidats', icon: Users },
     { path: '/applications', label: 'Applications', icon: FileText },
-    { path: '/admins', label: 'Admins', icon: UserCog },
   ];
+
+  // Only show Admins for super admins
+  const isSuperAdmin = account?.role === 'superadmin';
+  if (isSuperAdmin) {
+    navItems.push({ path: '/admins', label: 'Admins', icon: UserCog });
+  }
 
   const handleLogout = () => {
     logout();
