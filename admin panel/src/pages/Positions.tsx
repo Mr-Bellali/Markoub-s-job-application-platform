@@ -1,53 +1,93 @@
 import { Plus, Search } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { getPaginatedPositions } from '../services/positions';
+import DataGrid from '../components/shared/Datagrid';
+import Breadcrumb from '../components/shared/Breadcrumb';
+import Pagination from '../components/shared/Pagination';
+
+type Position = {
+  id: number;
+  title: string;
+  category: string;
+  workType: string;
+  location: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
 
 const Positions = () => {
+  const navigate = useNavigate();
+  // State to fill with gotten positions
+  const [positions, setPositions] = useState<Position[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [limit] = useState(10);
+
+  const fetchPositions = async (page: number = 1) => {
+    try {
+      // setIsLoading(true);
+      const response = await getPaginatedPositions(page, limit);
+      console.log('Fetched positions:', response);
+      setPositions(response.data || []);
+      setTotalPages(response.totalPages || 1);
+      setCurrentPage(response.page || 1);
+    } catch (err) {
+      console.error('Error fetching positions:', err);
+      // setError(err instanceof Error ? err.message : 'Failed to load positions');
+    } finally {
+      // setIsLoading(false);
+    }
+  };
+
+  const handlePageChange = (page: number) => {
+    fetchPositions(page);
+  };
+
+  useEffect(() => {
+    // Fetch positions
+    fetchPositions();
+  }, []);
+
   return (
-    <div className="max-w-7xl mx-auto">
-      <div className="flex justify-between items-start mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Positions</h1>
-          <p className="text-gray-600 mt-2">Manage all job positions</p>
+    <div className="w-full mx-auto px-12 py-8 flex flex-col gap-6">
+      {/* Breadcrumb */}
+      <Breadcrumb
+        items={[
+          { label: 'Positions' },
+        ]}
+      />
+
+      {/* Header for the create position button and filter  */}
+      <div className='w-full flex flex-row justify-between items-center'>
+        <div
+        // className='flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg'
+        >
+          {/* <Search size={20} className='text-gray-400' />
+          <input
+            type='text'
+            placeholder='Search positions...'
+            className='outline-none'
+          /> */}
         </div>
-        <button className="flex items-center gap-2 px-5 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium">
+        <button
+          onClick={() => navigate('/positions/create')}
+          className='flex items-center gap-2 px-6 py-3 bg-[#ff6804] text-white rounded-lg hover:bg-[#e55d03] transition-colors font-semibold'
+        >
           <Plus size={20} />
-          Add Position
+          Create Position
         </button>
       </div>
-
-      <div className="space-y-6">
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-          <input 
-            type="text" 
-            placeholder="Search positions..." 
-            className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+      <DataGrid data={positions} />
+      {totalPages > 0 && (
+        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
           />
         </div>
-
-        <div className="bg-white rounded-xl border border-gray-200">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Title</th>
-                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Category</th>
-                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Work Type</th>
-                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Location</th>
-                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
-                    No positions found. Create your first position to get started.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 };
