@@ -104,7 +104,9 @@ docker-compose up --build
 docker compose up --build
 ```
 
-this command will run everything from creating env files for the project to work to services running for other developers to make their life easier
+this command will run everything from creating env files for the project to work to services running for other developers to make their life easier.
+
+If you having a trouble to run the frontend like I do just comment ot in the docker compose and run them individually using `npm run dev` because I still have to learn working with fontend with docker
 
 ---
 
