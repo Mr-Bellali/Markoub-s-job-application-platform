@@ -65,6 +65,10 @@ app.use(setupPositionRoutes);
 app.use(setupCandidateRoutes);
 app.use(setupApplicationRoutes);
 
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
 app.listen(PORT, () => {
   console.log(`API running on http://localhost:${PORT}`);
 });
