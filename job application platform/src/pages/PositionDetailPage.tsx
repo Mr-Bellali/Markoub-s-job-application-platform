@@ -5,7 +5,7 @@ import { useMutation } from "@tanstack/react-query"
 import ReactMarkdown from 'react-markdown';
 import { getPosition } from "../services/positions";
 import PositionSkeleton from "../components/PositionDetailSkeleton";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import fileToBase64 from "../utils/convertToBase64";
 import { applyToPosition } from "../services/applications";
 import toast from "react-hot-toast";
@@ -37,6 +37,7 @@ const ApplicationDetailPage = () => {
     resume?: string
   }>({})
 
+  const formRef = useRef<HTMLFormElement | null>(null)
 
   const handleBackClick = () => {
     navigate('/');
@@ -117,7 +118,24 @@ const ApplicationDetailPage = () => {
       {/* Main container */}
       <section className="w-full flex flex-row gap-5">
         {/* position card */}
-        <div className="flex flex-col justify-between gap-2 items-start px-4 py-5 bg-[#fafbfc] rounded-xl min-w-100 h-40">
+        <div
+          className="
+            sticky
+            top-20
+            self-start
+            flex
+            flex-col
+            justify-between
+            gap-2
+            items-start
+            px-4
+            py-5
+            bg-[#fafbfc]
+            rounded-xl
+            min-w-100
+            h-40
+          "
+        >
           <div>
             {/* Job title */}
             <h1 className="text-2xl font-bold">
@@ -129,7 +147,15 @@ const ApplicationDetailPage = () => {
             </p>
           </div>
           {/* Apply button */}
-          <button className="px-2 py-1 bg-[#fe6a00] text-white rounded-sm cursor-pointer">
+          <button
+            className="px-2 py-1 bg-[#fe6a00] text-white rounded-sm cursor-pointer"
+            onClick={() => {
+              formRef.current?.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+              })
+            }}
+          >
             Apply
           </button>
         </div>
@@ -140,6 +166,7 @@ const ApplicationDetailPage = () => {
           </ReactMarkdown>
           {/* Application form */}
           <form
+            ref={formRef}
             noValidate
             onSubmit={handleSubmit}
             className="w-full border border-[#ebebeb] rounded-xl px-6 py-6 flex flex-col gap-4"
