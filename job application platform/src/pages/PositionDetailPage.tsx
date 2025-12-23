@@ -1,9 +1,33 @@
 import { ChevronLeft } from "lucide-react"
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query"
 import ReactMarkdown from 'react-markdown';
+import { getPosition } from "../services/positions";
+import PositionSkeleton from "../components/PositionDetailSkeleton";
 
 const ApplicationDetailPage = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  // Get the id from param
+  const { id } = useParams<{ id: string }>()
+
+  const {
+    data: position,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["position", id],
+    queryFn: () => getPosition(Number(id)),
+    enabled: !!id, // 👈 important
+  })
+
+  if(isLoading){
+    return <PositionSkeleton />
+  }
+
+  if (isError || !position) {
+    return <p className="p-10 text-red-500">Position not found</p>
+  }
+
   const handleBackClick = () => {
     navigate('/');
   }
@@ -30,11 +54,11 @@ const ApplicationDetailPage = () => {
           <div>
             {/* Job title */}
             <h1 className="text-2xl font-bold">
-              Software engineer
+              {position.title}
             </h1>
             {/* Job type and location */}
             <p className="text-sm text-gray-600">
-              Hybrid - Rabat, Morocco
+              {position.workType} {position.location && `- ${position.location}`}
             </p>
           </div>
           {/* Apply button */}
@@ -45,38 +69,7 @@ const ApplicationDetailPage = () => {
         {/* Job detail & apply form */}
         <div className="w-full p-5 flex flex-col gap-5">
           <ReactMarkdown>
-            # Backend Developer – Rabat, Morocco 🇲🇦
-
-            We are looking for a **Backend Developer** to join our growing team.
-
-            ## 📌 Job Details
-            - **Location:** Rabat (On-site / Hybrid)
-            - **Contract:** Full-time
-            - **Experience:** 2+ years
-
-            ## 🛠 Tech Stack
-            - Node.js / TypeScript
-            - PostgreSQL
-            - Docker
-            - REST APIs
-
-            ## ✅ Responsibilities
-            1. Design and maintain backend services
-            2. Work with databases and ORMs
-            3. Write clean, scalable code
-
-            ## 💡 Requirements
-            - Strong knowledge of **JavaScript / TypeScript**
-            - Experience with SQL databases
-            - Familiarity with Git
-
-            ## 🔗 Useful Links
-            - [Company Website](https://example.com)
-            - [GitHub](https://github.com)
-
-            ## 🧪 Code Example
-
-
+            {position.description || "_No description provided_"}
           </ReactMarkdown>
           {/* Application form */}
           <form className="flex flex-col items-center justify-center w-full border border-[#ebebeb] rounded-xl px-6 py-6 gap-4" onSubmit={handleSubmit}>
@@ -130,7 +123,7 @@ const ApplicationDetailPage = () => {
             <div className="w-full flex flex-row justify-end items-center">
               <button type="submit"
                 className="p-4 bg-[#ff6804] rounded-xl text-base text-white cursor-pointer hover:bg-orange-400 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                // disabled={loginMutation.isPending}
+              // disabled={loginMutation.isPending}
               >
                 {/* {loginMutation.isPending ? <Loader className="animate-spin" size={24} /> : 'Login'} */}
                 Submit application
