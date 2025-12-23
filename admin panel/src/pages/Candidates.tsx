@@ -1,72 +1,43 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { getPaginatedCandidates } from '../services/candidates';
 import DataGrid, { type Column } from '../components/shared/Datagrid';
 import Breadcrumb from '../components/shared/Breadcrumb';
 import Pagination from '../components/shared/Pagination';
-import { getPaginatedApplications } from '../services/applications';
 
-type Application = {
+type Candidate = {
   id: number;
-  createdAt: Date;
-  resumeFileName: string;
-  candidate: {
-    id: number;
-    fullName: string;
-    email: string;
-  };
-  position: {
-    id: number;
-    title: string;
-    category: string;
-  };
+  fullName: string;
+  email: string;
+  aliases: string | null;
+  applicationCount: number;
 };
 
-const Applications = () => {
+const Candidates = () => {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [limit] = useState(10);
 
-  // Fetch applications using React Query
+  // Fetch candidates using React Query
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['applications', currentPage, limit],
-    queryFn: () => getPaginatedApplications(currentPage, limit),
+    queryKey: ['candidates', currentPage, limit],
+    queryFn: () => getPaginatedCandidates(currentPage, limit),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  const formatDate = (dateString: Date) => {
-    const date = new Date(dateString);
-    const day = date.getDate();
-    const month = date.toLocaleString('en-US', { month: 'short' });
-    const year = date.getFullYear();
-    return `${day} ${month} ${year}`;
-  };
-
-  const columns: Column<Application>[] = [
+  const columns: Column<Candidate>[] = [
+    { key: 'fullName', header: 'Full Name' },
+    { key: 'email', header: 'Email' },
     { 
-      key: 'candidate', 
-      header: 'Candidate Name',
-      render: (application) => application.candidate.fullName
+      key: 'aliases', 
+      header: 'Aliases',
+      render: (candidate) => candidate.aliases || 'N/A'
     },
     { 
-      key: 'candidate', 
-      header: 'Email',
-      render: (application) => application.candidate.email
-    },
-    { 
-      key: 'position', 
-      header: 'Position',
-      render: (application) => application.position.title
-    },
-    { 
-      key: 'position', 
-      header: 'Category',
-      render: (application) => application.position.category
-    },
-    { 
-      key: 'createdAt', 
-      header: 'Applied Date',
-      render: (application) => formatDate(application.createdAt)
+      key: 'applicationCount', 
+      header: 'Applications',
+      render: (candidate) => candidate.applicationCount.toString()
     },
   ];
 
@@ -74,15 +45,11 @@ const Applications = () => {
     setCurrentPage(page);
   };
 
-  const handleRowClick = (application: Application) => {
-    navigate(`/applications/${application.id}`);
-  };
-
   // Handle loading state
   if (isLoading) {
     return (
       <div className="w-full mx-auto px-12 py-8 flex justify-center items-center">
-        <p>Loading applications...</p>
+        <p>Loading candidates...</p>
       </div>
     );
   }
@@ -92,13 +59,13 @@ const Applications = () => {
     return (
       <div className="w-full mx-auto px-12 py-8 flex justify-center items-center">
         <p className="text-red-500">
-          Error loading applications: {error instanceof Error ? error.message : 'Unknown error'}
+          Error loading candidates: {error instanceof Error ? error.message : 'Unknown error'}
         </p>
       </div>
     );
   }
 
-  const applications = data?.data || [];
+  const candidates = data?.data || [];
   const totalPages = data?.totalPages || 1;
 
   return (
@@ -106,7 +73,7 @@ const Applications = () => {
       {/* Breadcrumb */}
       <Breadcrumb
         items={[
-          { label: 'Applications' },
+          { label: 'Candidates' },
         ]}
       />
 
@@ -118,16 +85,12 @@ const Applications = () => {
           {/* <Search size={20} className='text-gray-400' />
           <input
             type='text'
-            placeholder='Search applications...'
+            placeholder='Search candidates...'
             className='outline-none'
           /> */}
         </div>
       </div>
-      <DataGrid 
-        data={applications} 
-        columns={columns}
-        onRowClick={handleRowClick}
-      />
+      <DataGrid data={candidates} columns={columns} />
       {totalPages > 0 && (
         <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2">
           <Pagination
@@ -141,4 +104,4 @@ const Applications = () => {
   );
 };
 
-export default Applications;
+export default Candidates;
