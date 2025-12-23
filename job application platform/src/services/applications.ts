@@ -15,15 +15,14 @@ export function fileToBase64(file: File): Promise<string> {
   })
 }
 
-export async function applyToPosition(positionId: number, fullName: string, email: string, file: File) {
-  const fileB64 = await fileToBase64(file)
-  const payload = {
-    fullName,
-    email,
-    fileB64,
-    fileName: file.name
-  }
+interface Payload {
+  fullName: string;
+  email: string;
+  fileB64: string;
+  fileName: string;
+}
 
+export async function applyToPosition(positionId: number, payload: Payload) {
   const res = await api.post(`/positions/${positionId}/apply`, payload)
   return res.data
 }

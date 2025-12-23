@@ -1,9 +1,15 @@
-import { ChevronLeft } from "lucide-react"
+import { ChevronLeft, Loader } from "lucide-react"
 import { useNavigate, useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query"
 import ReactMarkdown from 'react-markdown';
 import { getPosition } from "../services/positions";
 import PositionSkeleton from "../components/PositionDetailSkeleton";
+import { useState } from "react";
+import fileToBase64 from "../utils/convertToBase64";
+import { applyToPosition } from "../services/applications";
+import toast from "react-hot-toast";
+import { applicationSchema } from "../@types/application.validator";
 
 const ApplicationDetailPage = () => {
   const navigate = useNavigate();
@@ -19,21 +25,82 @@ const ApplicationDetailPage = () => {
     queryFn: () => getPosition(Number(id)),
     enabled: !!id, // 👈 important
   })
+  // Fill the states we will send 
+  const [fullName, setFullName] = useState("")
+  const [email, setEmail] = useState("")
+  const [resume, setResume] = useState<File | null>(null)
 
-  if(isLoading){
-    return <PositionSkeleton />
-  }
+  // Validation state
+  const [errors, setErrors] = useState<{
+    fullName?: string
+    email?: string
+    resume?: string
+  }>({})
 
-  if (isError || !position) {
-    return <p className="p-10 text-red-500">Position not found</p>
-  }
 
   const handleBackClick = () => {
     navigate('/');
   }
 
-  const handleSubmit = () => {
+  const applyMutation = useMutation({
+    mutationFn: (payload: {
+      fullName: string
+      email: string
+      fileB64: string
+      fileName: string
+    }) => applyToPosition(Number(id), payload),
 
+    onSuccess: () => {
+      toast.success("Application sent successfully")
+    },
+
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.error || "Submission failed")
+    },
+  })
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setErrors({})
+
+    const result = applicationSchema.safeParse({
+      fullName,
+      email,
+      resume,
+    })
+
+    if (!result.success) {
+      const fieldErrors: typeof errors = {}
+
+      result.error.issues.forEach((err) => {
+        const field = err.path[0] as keyof typeof errors
+        fieldErrors[field] = err.message
+      })
+
+      setErrors(fieldErrors)
+      return
+    }
+
+    try {
+      const fileB64 = await fileToBase64(resume!)
+
+      applyMutation.mutate({
+        fullName,
+        email,
+        fileB64,
+        fileName: resume!.name,
+      })
+    } catch {
+      toast.error("Failed to read resume file")
+    }
+  }
+
+  if (isLoading) {
+    return <PositionSkeleton />
+  }
+
+  if (isError || !position) {
+    return <p className="p-10 text-red-500">Position not found</p>
   }
 
   return (
@@ -72,72 +139,84 @@ const ApplicationDetailPage = () => {
             {position.description || "_No description provided_"}
           </ReactMarkdown>
           {/* Application form */}
-          <form className="flex flex-col items-center justify-center w-full border border-[#ebebeb] rounded-xl px-6 py-6 gap-4" onSubmit={handleSubmit}>
-            <p className="w-full text-xl font-bold">
-              Application
-            </p>
-            <div className="w-full flex flex-row items-center gap-4 ">
+          <form
+            noValidate
+            onSubmit={handleSubmit}
+            className="w-full border border-[#ebebeb] rounded-xl px-6 py-6 flex flex-col gap-4"
+          >
+
+            <p className="text-xl font-bold">Application</p>
+
+            <div className="flex gap-4">
               <div className="flex-1">
-                <label className="text-gray-700 font-bold mb-2 block">Full name*</label>
+                <label className="font-bold mb-2 block">Full name*</label>
                 <input
-                  type="fullname"
-                  placeholder="yassine@gmail.com"
-                  className="w-full border rounded-xl p-4 mb-2 focus:outline-none focus:ring-2 transition-colors border-[#e7e7e7] focus:border-orange-400 focus:ring-orange-400"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className={`w-full rounded-xl p-4 border focus:outline-none focus:ring-2 transition-colors ${errors.fullName
+                    ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
+                    : 'border-[#e7e7e7] focus:border-orange-400 focus:ring-orange-400'
+                    }`}
                 />
+                {errors.fullName && (
+                  <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>
+                )}
               </div>
 
               <div className="flex-1">
-                <label className="text-gray-700 font-bold mb-2 block">Email address*</label>
+                <label className="font-bold mb-2 block">Email*</label>
                 <input
                   type="email"
-                  placeholder="yassine@gmail.com"
-                  className="w-full border rounded-xl p-4 mb-2 focus:outline-none focus:ring-2 transition-colors border-[#e7e7e7] focus:border-orange-400 focus:ring-orange-400"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={`w-full rounded-xl p-4 border focus:outline-none focus:ring-2 transition-colors ${errors.email
+                    ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
+                    : 'border-[#e7e7e7] focus:border-orange-400 focus:ring-orange-400'
+                    }`}
                 />
+                {errors.email && (
+                  <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                )}
+
               </div>
             </div>
 
-            <div className="w-full">
-              <label className="text-gray-700 font-bold mb-2 block">
-                Resume *
-              </label>
+            <div>
+              <label className="font-bold mb-2 block">Resume*</label>
 
               <label
                 htmlFor="resume"
-                className="w-full border border-[#e7e7e7] rounded-xl p-4 flex items-center justify-center cursor-pointer
-               text-gray-600 hover:border-orange-400 hover:text-orange-500 transition font-bold"
+                className={`w-full rounded-xl p-4 flex justify-center cursor-pointer font-bold border ${errors.resume ? 'border-red-400' : 'border-[#e7e7e7]'
+                  }`}
               >
-                Resume
+                {resume ? resume.name : "Resume"}
               </label>
 
               <input
                 id="resume"
                 type="file"
-                accept=".pdf"
+                accept="application/pdf"
                 className="hidden"
+                onChange={(e) => setResume(e.target.files?.[0] || null)}
               />
 
-              <p className="text-sm text-gray-400 mt-1">PDF only, 2MB max</p>
+              {errors.resume && (
+                <p className="text-red-500 text-sm mt-1">{errors.resume}</p>
+              )}
+
             </div>
 
-
-            <div className="w-full flex flex-row justify-end items-center">
-              <button type="submit"
-                className="p-4 bg-[#ff6804] rounded-xl text-base text-white cursor-pointer hover:bg-orange-400 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              // disabled={loginMutation.isPending}
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={applyMutation.isPending}
+                className="p-4 bg-[#ff6804] text-white rounded-xl disabled:opacity-50 cursor-pointer"
               >
-                {/* {loginMutation.isPending ? <Loader className="animate-spin" size={24} /> : 'Login'} */}
-                Submit application
+                {applyMutation.isPending ? <Loader className="animate-spin" size={24} /> : "Submit application"}
               </button>
             </div>
-
-            {/* <label htmlFor="email" className="text-gray-700 font-medium mb-2">Email</label>
-            <input type="email" id="email" name="email"
-              placeholder="yassine@gmail.com"
-              className="w-full border rounded-xl p-4 mb-2 focus:outline-none focus:ring-2 transition-colors border-[#e7e7e7] focus:border-orange-400 focus:ring-orange-400"
-            /> */}
-
-
           </form>
+
         </div>
       </section>
     </div>
