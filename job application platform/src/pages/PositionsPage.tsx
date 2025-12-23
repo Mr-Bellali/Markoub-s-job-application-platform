@@ -1,23 +1,51 @@
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import DataGrid from "../components/DataGrid"
 import ApplySpontaneouslyModal from "../components/ApplySpontaneouslyModal"
 import { getPositions } from "../services/positions"
+import CustomSelect from "../components/customSelect"
 
-const ApplicationsPage = () => {
+const PositionsPage = () => {
+  const [selectedCategory, setSelectedCategory] = useState<string>("all")
+  const [openModal, setOpenModal] = useState(false)
+
   const {
     data,
     isLoading,
     isError,
     error,
   } = useQuery({
-    queryKey: ["positions", { page: 1, limit: 50 }],
-    queryFn: () => getPositions(1, 50),
+    queryKey: ["positions", { page: 1, limit: 50, category: selectedCategory === "all" ? undefined : selectedCategory }],
+    queryFn: () => getPositions(1, 50, selectedCategory === "all" ? undefined : selectedCategory),
   })
 
-  const [openModal, setOpenModal] = useState(false)
-
   const positions = data?.data ?? []
+
+  // Extract unique categories from positions
+  const categoryOptions = useMemo(() => {
+    // Get all unique categories from the fetched positions
+    const allPositionsData = positions
+    const uniqueCategories = new Set<string>()
+    
+    allPositionsData.forEach((position) => {
+      if (position.category) {
+        uniqueCategories.add(position.category)
+      }
+    })
+
+    // Create options array with "All Departments" first
+    const options = [
+      { value: "all", label: "All Departments" },
+      ...Array.from(uniqueCategories)
+        .sort()
+        .map((category) => ({
+          value: category,
+          label: category,
+        })),
+    ]
+
+    return options
+  }, [positions])
 
   return (
     <section className="w-full min-h-screen px-50 pt-20 flex flex-col items-center">
@@ -32,8 +60,13 @@ const ApplicationsPage = () => {
           <h2>
             We have {positions.length} open positions
           </h2>
-          <div>
-            dropDown
+          <div className="w-64">
+            <CustomSelect
+              value={selectedCategory}
+              onChange={setSelectedCategory}
+              options={categoryOptions}
+              placeholder="Filter by department"
+            />
           </div>
         </div>
 
@@ -68,4 +101,4 @@ const ApplicationsPage = () => {
   )
 }
 
-export default ApplicationsPage
+export default PositionsPage
