@@ -96,7 +96,7 @@ const ApplicationDetail = () => {
       {/* Breadcrumb */}
       <Breadcrumb
         items={[
-          { label: 'Applications', onClick: () => navigate('/applications') },
+          { label: 'Applications' },
           { label: `Application #${id}` },
         ]}
       />

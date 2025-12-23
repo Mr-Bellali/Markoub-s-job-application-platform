@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   setup:
     image: alpine:latest
@@ -8,9 +10,9 @@ services:
     command: |
       sh -c '
         echo "Checking environment files..."
-        if [ ! -f .env.postgres ] || [ ! -f api/.env ] || [ ! -f admin/.env ]; then
+        if [ ! -f .env.postgres ] || [ ! -f api/.env ] || [ ! -f "admin panel/.env" ]; then
           echo "Missing environment files. Creating them now..."
-          apk add --no-cache bash
+          apk add --no-cache bash curl
           chmod +x setup-env.sh
           ./setup-env.sh
         else
@@ -20,46 +22,9 @@ services:
     networks:
       - app-network
 
-  api:
-    container_name: api
-    build:
-      context: ./api
-      dockerfile: Dockerfile
-    env_file:
-      - ./api/.env
-    ports:
-      - '8080:8080'
-    volumes:
-      - ./api/src:/app/src
-      - ./api/tsconfig.json:/app/tsconfig.json
-    depends_on:
-      setup:
-        condition: service_completed_successfully
-      migration:
-        condition: service_completed_successfully
-      localstack:
-        condition: service_healthy
-    networks:
-      - app-network
-
-  migration:
-    container_name: migration
-    build:
-      context: ./api
-      dockerfile: Dockerfile
-    env_file:
-      - ./api/.env
-    command: npx drizzle-kit migrate
-    depends_on:
-      setup:
-        condition: service_completed_successfully
-      postgres:
-        condition: service_healthy
-    networks:
-      - app-network
-
   postgres:
     image: pgvector/pgvector:0.8.0-pg16
+    container_name: postgres
     environment:
       POSTGRES_DB: markoub_db
       POSTGRES_USER: markoub_db
@@ -70,12 +35,32 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U markoub_db"]
+      test: ["CMD-SHELL", "pg_isready -U markoub_db -d markoub_db"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
     restart: always
+    networks:
+      - app-network
+
+  migration:
+    container_name: migration
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://markoub_db:admin123@postgres:5432/markoub_db
+      - DATABASE_DIRECT_URL=postgresql://markoub_db:admin123@postgres:5432/markoub_db
+      - JWT_SECRET_KEY=8b4e1673049f43c4f1c5e746d9750c66d04ca0566c9455352f1336bbfa825723
+    command: npx drizzle-kit migrate
+    volumes:
+      - ./api/src:/app/src
+      - ./api/drizzle:/app/drizzle
+      - ./api/drizzle.config.ts:/app/drizzle.config.ts
     depends_on:
+      postgres:
+        condition: service_healthy
       setup:
         condition: service_completed_successfully
     networks:
@@ -100,8 +85,68 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 20s
+    networks:
+      - app-network
+
+  api:
+    container_name: api
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    env_file:
+      - ./api/.env
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./api/src:/app/src
+      - ./api/tsconfig.json:/app/tsconfig.json
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     depends_on:
+      postgres:
+        condition: service_healthy
+      migration:
+        condition: service_completed_successfully
+      localstack:
+        condition: service_healthy
+      setup:
+        condition: service_completed_successfully
+    networks:
+      - app-network
+
+  adminpanel:
+    container_name: admin
+    build:
+      context: ./admin panel
+      dockerfile: Dockerfile
+    ports:
+      - "7000:7000"
+    env_file:
+      - ./admin panel/.env
+    depends_on:
+      api:
+        condition: service_healthy
+      setup:
+        condition: service_completed_successfully
+    networks:
+      - app-network
+
+  jobapplicationplatform:
+    container_name: jobApplicationPlatform
+    build:
+      context: ./job application platform
+      dockerfile: Dockerfile
+    ports:
+      - "6000:6000"
+    depends_on:
+      api:
+        condition: service_healthy
       setup:
         condition: service_completed_successfully
     networks:

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
-import { Loader, Save, X } from 'lucide-react';
+import { Loader } from 'lucide-react';
 import Breadcrumb from '../components/shared/Breadcrumb';
 import CustomSelect from '../components/shared/CustomSelect';
 import { createPosition } from '../services/positions';
@@ -134,11 +134,10 @@ const CreatePosition = () => {
               name="title"
               value={formData.title}
               onChange={handleChange}
-              className={`w-full border rounded-xl p-4 mb-2 focus:outline-none focus:ring-2 transition-colors ${
-                errors.title
+              className={`w-full border rounded-xl p-4 mb-2 focus:outline-none focus:ring-2 transition-colors ${errors.title
                   ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
                   : 'border-[#e7e7e7] focus:border-orange-400 focus:ring-orange-400'
-              }`}
+                }`}
               placeholder="e.g., Junior Full-Stack Developer"
             />
             {errors.title && (
@@ -158,11 +157,10 @@ const CreatePosition = () => {
               name="category"
               value={formData.category}
               onChange={handleChange}
-              className={`w-full border rounded-xl p-4 mb-2 focus:outline-none focus:ring-2 transition-colors ${
-                errors.category
+              className={`w-full border rounded-xl p-4 mb-2 focus:outline-none focus:ring-2 transition-colors ${errors.category
                   ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
                   : 'border-[#e7e7e7] focus:border-orange-400 focus:ring-orange-400'
-              }`}
+                }`}
               placeholder="e.g., Software Engineering"
             />
             {errors.category && (
@@ -204,11 +202,10 @@ const CreatePosition = () => {
                 name="location"
                 value={formData.location}
                 onChange={handleChange}
-                className={`w-full border rounded-xl p-4 mb-2 focus:outline-none focus:ring-2 transition-colors ${
-                  errors.location
+                className={`w-full border rounded-xl p-4 mb-2 focus:outline-none focus:ring-2 transition-colors ${errors.location
                     ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
                     : 'border-[#e7e7e7] focus:border-orange-400 focus:ring-orange-400'
-                }`}
+                  }`}
                 placeholder="e.g., Casablanca, Morocco"
               />
               {errors.location && (
@@ -222,7 +219,7 @@ const CreatePosition = () => {
         {/* Description Section - Split View */}
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Job Description</h2>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Editor */}
             <div className="flex flex-col">
@@ -234,11 +231,10 @@ const CreatePosition = () => {
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
-                className={`w-full h-[500px] border rounded-xl p-4 mb-2 focus:outline-none focus:ring-2 transition-colors font-mono text-sm resize-none ${
-                  errors.description
+                className={`w-full h-[500px] border rounded-xl p-4 mb-2 focus:outline-none focus:ring-2 transition-colors font-mono text-sm resize-none ${errors.description
                     ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
                     : 'border-[#e7e7e7] focus:border-orange-400 focus:ring-orange-400'
-                }`}
+                  }`}
                 placeholder="## About the Role&#10;&#10;Describe the position here...&#10;&#10;## Responsibilities&#10;&#10;- First responsibility&#10;- Second responsibility&#10;&#10;## Requirements&#10;&#10;- First requirement&#10;- Second requirement"
               />
               {errors.description && (
@@ -266,7 +262,7 @@ const CreatePosition = () => {
             disabled={isSubmitting}
             className="flex items-center gap-2 px-6 py-3 bg-[#ff6804] text-white rounded-lg hover:bg-[#e55d03] transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed mb-5 cursor-pointer hover:bg-orange-300"
           >
-            {isSubmitting ? <Loader className="animate-spin" size={24} />  : 'Submit'}
+            {isSubmitting ? <Loader className="animate-spin" size={24} /> : 'Submit'}
           </button>
         </div>
       </form>

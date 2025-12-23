@@ -19,6 +19,7 @@ echo "${BLUE}Creating api/.env...${NC}"
 mkdir -p api
 cat > api/.env << EOF
 DATABASE_URL="postgresql://markoub_db:admin123@postgres:5432/markoub_db"
+DATABASE_DIRECT_URL="postgresql://markoub_db:admin123@localhost:5432/markoub_db"
 JWT_SECRET_KEY="8b4e1673049f43c4f1c5e746d9750c66d04ca0566c9455352f1336bbfa825723"
 S3_REGION="us-east-1"
 S3_ENDPOINT="http://localstack:4566"

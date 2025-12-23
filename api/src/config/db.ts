@@ -2,9 +2,10 @@ import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from '../db/schema/admins';
 
+const connectionString = process.env.DATABASE_URL;
 // Initialize the PostgreSQL connection pool
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: connectionString,
   max: 10,
 });
 
