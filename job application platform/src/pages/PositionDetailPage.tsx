@@ -180,6 +180,7 @@ const ApplicationDetailPage = () => {
                 <input
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Yassine Alaoui"
                   className={`w-full rounded-xl p-4 border focus:outline-none focus:ring-2 transition-colors ${errors.fullName
                     ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
                     : 'border-[#e7e7e7] focus:border-orange-400 focus:ring-orange-400'
@@ -195,6 +196,7 @@ const ApplicationDetailPage = () => {
                 <input
                   type="email"
                   value={email}
+                  placeholder="yassine@gmail.com"
                   onChange={(e) => setEmail(e.target.value)}
                   className={`w-full rounded-xl p-4 border focus:outline-none focus:ring-2 transition-colors ${errors.email
                     ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
@@ -226,6 +228,9 @@ const ApplicationDetailPage = () => {
                 className="hidden"
                 onChange={(e) => setResume(e.target.files?.[0] || null)}
               />
+              <p className="text-sm pt-1 text-gray-500">
+                PDF Only, 2MB Max
+              </p>
 
               {errors.resume && (
                 <p className="text-red-500 text-sm mt-1">{errors.resume}</p>
