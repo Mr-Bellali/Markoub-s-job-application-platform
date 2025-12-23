@@ -1,40 +1,46 @@
 import { LayoutDashboard, Briefcase, Users, FileText } from 'lucide-react';
 
 const Dashboard = () => {
-  const stats = [
-    { label: 'Total Positions', value: '24', icon: Briefcase, color: 'bg-blue-500' },
-    { label: 'Candidats', value: '156', icon: Users, color: 'bg-green-500' },
-    { label: 'Applications', value: '342', icon: FileText, color: 'bg-orange-500' },
-    { label: 'Active Jobs', value: '18', icon: LayoutDashboard, color: 'bg-purple-500' },
-  ];
+  const connectedAccount = JSON.parse(localStorage.getItem("auth_account") as string);
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-2">Welcome to your job portal dashboard</p>
-      </div>
+    <div className="w-full mx-auto px-12 py-10">
+      {/* Admin Card */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#ff6804] to-[#ff8a3d] shadow-xl">
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((stat, index) => {
-          const Icon = stat.icon;
-          return (
-            <div key={index} className="bg-white p-6 rounded-xl border border-gray-200 flex items-center gap-4 hover:shadow-lg transition-shadow">
-              <div className={`w-14 h-14 ${stat.color} bg-opacity-10 rounded-xl flex items-center justify-center`}>
-                <Icon className={`${stat.color.replace('bg-', 'text-')}`} size={24} />
-              </div>
-              <div>
-                <p className="text-gray-600 text-sm">{stat.label}</p>
-                <h3 className="text-3xl font-bold text-gray-900">{stat.value}</h3>
-              </div>
+        {/* Decorative blur */}
+        <div className="absolute -top-20 -right-20 w-64 h-64 bg-white/20 rounded-full blur-3xl" />
+
+        <div className="relative flex items-center gap-10 px-10 py-8">
+
+          {/* Avatar */}
+          <div className="relative">
+            <div className="w-36 h-36 bg-white rounded-full flex items-center justify-center ring-8 ring-white/30 shadow-lg">
+              <span className="text-6xl font-extrabold text-[#ff6804]">
+                {connectedAccount.firstName.charAt(0)}
+              </span>
             </div>
-          );
-        })}
-      </div>
+          </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-xl font-semibold mb-2">Recent Activity</h2>
-        <p className="text-gray-500">Latest updates will appear here</p>
+          {/* User info */}
+          <div className="flex-1 flex flex-col gap-4 text-white">
+            <div>
+              <h2 className="text-3xl font-bold leading-tight">
+                {connectedAccount.firstName} {connectedAccount.lastName}
+              </h2>
+              <p className="text-white/80 text-sm">
+                {connectedAccount.email}
+              </p>
+            </div>
+
+            {/* Role badge */}
+            <div className="flex items-center gap-3">
+              <span className="inline-flex items-center px-4 py-1.5 rounded-full bg-white/20 backdrop-blur text-sm font-semibold">
+                {connectedAccount.role}
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
