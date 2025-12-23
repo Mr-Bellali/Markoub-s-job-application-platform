@@ -5,6 +5,7 @@ import toast from "react-hot-toast"
 import { applyToPosition } from "../services/applications"
 import { applicationSchema } from "../@types/application.validator"
 import fileToBase64 from "../utils/convertToBase64"
+import CustomSelect from "./customSelect"
 
 type Props = {
     open: boolean
@@ -108,6 +109,12 @@ const ApplySpontaneouslyModal = ({ open, onClose, positions }: Props) => {
         }
     }
 
+    // Transform positions array to options format
+    const positionOptions = positions.map((p) => ({
+        value: String(p.id),
+        label: p.title,
+    }))
+
     return (
         <div
             className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 px-4 cursor-pointer"
@@ -176,21 +183,13 @@ const ApplySpontaneouslyModal = ({ open, onClose, positions }: Props) => {
                         <label className="block text-sm font-medium mb-1">
                             Position applying for *
                         </label>
-                        <select
+                        <CustomSelect
                             value={position}
-                            onChange={(e) => setPosition(e.target.value)}
-                            className={`w-full rounded-lg px-4 py-2 border bg-white focus:ring-2 ${errors.position
-                                    ? "border-red-400 focus:ring-red-400"
-                                    : "border-gray-300 focus:ring-orange-500"
-                                }`}
-                        >
-                            <option value="">Select a position</option>
-                            {positions.map((p) => (
-                                <option key={p.id} value={p.id}>
-                                    {p.title}
-                                </option>
-                            ))}
-                        </select>
+                            onChange={setPosition}
+                            options={positionOptions}
+                            placeholder="Select a position"
+                            error={!!errors.position}
+                        />
                         {errors.position && (
                             <p className="text-red-500 text-sm mt-1">
                                 {errors.position}
