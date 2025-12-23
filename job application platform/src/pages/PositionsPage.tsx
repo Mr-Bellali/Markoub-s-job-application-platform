@@ -9,8 +9,18 @@ const PositionsPage = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
   const [openModal, setOpenModal] = useState(false)
 
+  // Fetch all positions without category filter to get all categories
   const {
-    data,
+    data: allPositionsData,
+  } = useQuery({
+    queryKey: ["positions", "all"],
+    queryFn: () => getPositions(1, 1000), // Fetch all positions to get all categories
+    staleTime: Infinity, // Keep this data fresh indefinitely
+  })
+
+  // Fetch filtered positions based on selected category
+  const {
+    data: filteredData,
     isLoading,
     isError,
     error,
@@ -19,15 +29,14 @@ const PositionsPage = () => {
     queryFn: () => getPositions(1, 50, selectedCategory === "all" ? undefined : selectedCategory),
   })
 
-  const positions = data?.data ?? []
+  const positions = filteredData?.data ?? []
+  const allPositions = allPositionsData?.data ?? []
 
-  // Extract unique categories from positions
+  // Extract unique categories from ALL positions (not just filtered ones)
   const categoryOptions = useMemo(() => {
-    // Get all unique categories from the fetched positions
-    const allPositionsData = positions
     const uniqueCategories = new Set<string>()
     
-    allPositionsData.forEach((position) => {
+    allPositions.forEach((position) => {
       if (position.category) {
         uniqueCategories.add(position.category)
       }
@@ -45,7 +54,7 @@ const PositionsPage = () => {
     ]
 
     return options
-  }, [positions])
+  }, [allPositions])
 
   return (
     <section className="w-full min-h-screen px-50 pt-20 flex flex-col items-center">
@@ -66,6 +75,7 @@ const PositionsPage = () => {
               onChange={setSelectedCategory}
               options={categoryOptions}
               placeholder="Filter by department"
+              className="p-4 text-base font-semibold"
             />
           </div>
         </div>
