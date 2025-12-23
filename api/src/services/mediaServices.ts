@@ -1,5 +1,6 @@
 import { s3 } from "../config";
-import { PutObjectCommand, PutObjectCommandOutput } from "@aws-sdk/client-s3";
+import { PutObjectCommand, PutObjectCommandOutput, GetObjectCommand } from "@aws-sdk/client-s3";
+import { Readable } from "stream";
 
 export default class MediaServices {
     private maxFileSize: number;
@@ -34,5 +35,31 @@ export default class MediaServices {
                 ContentType: mimeType,
             })
         );
+    }
+
+    // Method to retrieve file from bucket
+    async getFileFromBucket(filePath: string): Promise<Buffer> {
+        try {
+            const command = new GetObjectCommand({
+                Bucket: "resumes",
+                Key: filePath,
+            });
+
+            const response = await s3.send(command);
+
+            // Convert the stream to buffer
+            if (response.Body instanceof Readable) {
+                const chunks: Buffer[] = [];
+                for await (const chunk of response.Body) {
+                    chunks.push(Buffer.from(chunk));
+                }
+                return Buffer.concat(chunks);
+            }
+
+            throw new Error("Invalid response body type");
+        } catch (error) {
+            console.error("Error retrieving file from bucket: ", error);
+            throw error;
+        }
     }
 }
