@@ -1,4 +1,10 @@
 import { useEffect, useState } from "react"
+import { useMutation } from "@tanstack/react-query"
+import { Loader } from "lucide-react"
+import toast from "react-hot-toast"
+import { applyToPosition } from "../services/applications"
+import { applicationSchema } from "../@types/application.validator"
+import fileToBase64 from "../utils/convertToBase64"
 
 type Props = {
     open: boolean
@@ -7,17 +13,17 @@ type Props = {
 }
 
 type Errors = {
-    name?: string
+    fullName?: string
     email?: string
     position?: string
-    file?: string
+    resume?: string
 }
 
 const ApplySpontaneouslyModal = ({ open, onClose, positions }: Props) => {
-    const [name, setName] = useState("")
+    const [fullName, setFullName] = useState("")
     const [email, setEmail] = useState("")
     const [position, setPosition] = useState("")
-    const [file, setFile] = useState<File | null>(null)
+    const [resume, setResume] = useState<File | null>(null)
     const [errors, setErrors] = useState<Errors>({})
 
     useEffect(() => {
@@ -36,26 +42,70 @@ const ApplySpontaneouslyModal = ({ open, onClose, positions }: Props) => {
         }
     }, [open, onClose])
 
+    const applyMutation = useMutation({
+        mutationFn: (payload: {
+            fullName: string
+            email: string
+            fileB64: string
+            fileName: string
+        }) => applyToPosition(Number(position), payload),
+
+        onSuccess: () => {
+            toast.success("Application sent successfully")
+            // Reset form
+            setFullName("")
+            setEmail("")
+            setPosition("")
+            setResume(null)
+            setErrors({})
+            onClose()
+        },
+
+        onError: (err: any) => {
+            toast.error(err?.response?.data?.error || "Submission failed")
+        },
+    })
+
     if (!open) return null
 
-    const validate = () => {
-        const newErrors: Errors = {}
+    const handleSubmit = async () => {
+        setErrors({})
 
-        if (!name.trim()) newErrors.name = "Full name is required"
-        if (!email.trim()) newErrors.email = "Email is required"
-        if (!position) newErrors.position = "Position is required"
-        if (!file) newErrors.file = "Resume is required"
+        const result = applicationSchema.safeParse({
+            fullName,
+            email,
+            resume,
+        })
 
-        setErrors(newErrors)
-        return Object.keys(newErrors).length === 0
-    }
+        if (!result.success) {
+            const fieldErrors: Errors = {}
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault()
-        if (!validate()) return
+            result.error.issues.forEach((err) => {
+                const field = err.path[0] as keyof Errors
+                fieldErrors[field] = err.message
+            })
 
-        console.log({ name, email, position, file })
-        onClose()
+            setErrors(fieldErrors)
+            return
+        }
+
+        if (!position) {
+            setErrors({ position: "Position is required" })
+            return
+        }
+
+        try {
+            const fileB64 = await fileToBase64(resume!)
+
+            applyMutation.mutate({
+                fullName,
+                email,
+                fileB64,
+                fileName: resume!.name,
+            })
+        } catch {
+            toast.error("Failed to read resume file")
+        }
     }
 
     return (
@@ -81,23 +131,23 @@ const ApplySpontaneouslyModal = ({ open, onClose, positions }: Props) => {
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} noValidate>
+                <div>
                     {/* Full name */}
                     <div className="mb-4">
                         <label className="block text-sm font-medium mb-1">
                             Full name *
                         </label>
                         <input
-                            value={name}
+                            value={fullName}
                             placeholder="Yassine Aloui"
-                            onChange={(e) => setName(e.target.value)}
-                            className={`w-full rounded-lg px-4 py-2 border focus:ring-2 ${errors.name
+                            onChange={(e) => setFullName(e.target.value)}
+                            className={`w-full rounded-lg px-4 py-2 border focus:ring-2 ${errors.fullName
                                     ? "border-red-400 focus:ring-red-400"
                                     : "border-gray-300 focus:ring-orange-500"
                                 }`}
                         />
-                        {errors.name && (
-                            <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+                        {errors.fullName && (
+                            <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>
                         )}
                     </div>
 
@@ -155,33 +205,38 @@ const ApplySpontaneouslyModal = ({ open, onClose, positions }: Props) => {
                         </label>
 
                         <label
-                            className={`flex justify-center px-4 py-3 border rounded-lg cursor-pointer ${errors.file ? "border-red-400" : "border-gray-300"
+                            className={`flex justify-center px-4 py-3 border rounded-lg cursor-pointer ${errors.resume ? "border-red-400" : "border-gray-300"
                                 }`}
                         >
-                            {file ? file.name : "Resume"}
+                            {resume ? resume.name : "Resume"}
                             <input
                                 type="file"
                                 accept="application/pdf"
                                 className="hidden"
-                                onChange={(e) => setFile(e.target.files?.[0] || null)}
+                                onChange={(e) => setResume(e.target.files?.[0] || null)}
                             />
                         </label>
                         <p className="text-sm pt-1 text-gray-500">
                             PDF Only, 2MB Max
                         </p>
-                        {errors.file && (
-                            <p className="text-red-500 text-sm mt-1">{errors.file}</p>
+                        {errors.resume && (
+                            <p className="text-red-500 text-sm mt-1">{errors.resume}</p>
                         )}
                     </div>
 
                     {/* Submit */}
                     <button
-                        type="submit"
-                        className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-2.5 rounded-lg transition cursor-pointer"
+                        onClick={handleSubmit}
+                        disabled={applyMutation.isPending}
+                        className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-2.5 rounded-lg transition cursor-pointer disabled:opacity-50 flex items-center justify-center"
                     >
-                        Submit application
+                        {applyMutation.isPending ? (
+                            <Loader className="animate-spin" size={20} />
+                        ) : (
+                            "Submit application"
+                        )}
                     </button>
-                </form>
+                </div>
             </div>
         </div>
     )
