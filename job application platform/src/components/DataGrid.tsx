@@ -1,3 +1,4 @@
+import { Loader } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 interface DataGridProps {
@@ -17,7 +18,7 @@ const DataGrid = ({
         navigate(`/positions/${id}`)
     }
 
-    if (loading) return <div>Loading positions…</div>
+    if (loading) return <Loader className='animate-spin' size={24}/>
     if (error) return <div className="text-red-600">{error}</div>
 
     return (
