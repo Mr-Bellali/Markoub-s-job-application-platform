@@ -1,27 +1,17 @@
-import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getPositions } from '../services/positions'
 
-const DataGrid = () => {
+interface DataGridProps {
+    positions: any, 
+    loading: boolean,
+    error: string | null
+}
+
+const DataGrid = ({
+    positions,
+    loading,
+    error
+}: DataGridProps) => {
     const navigate = useNavigate()
-    const [positions, setPositions] = useState<any[]>([])
-    const [loading, setLoading] = useState(false)
-    const [error, setError] = useState<string | null>(null)
-
-    useEffect(() => {
-        async function load() {
-            setLoading(true)
-            try {
-                const res = await getPositions(1, 50)
-                setPositions(res.data || [])
-            } catch (err: any) {
-                setError(err?.message || 'Failed to load positions')
-            } finally {
-                setLoading(false)
-            }
-        }
-        load()
-    }, [])
 
     const handleApplyClick = (id: number) => {
         navigate(`/positions/${id}`)
@@ -32,7 +22,7 @@ const DataGrid = () => {
 
     return (
         <div className="w-full flex flex-col">
-            {positions.map((pos) => (
+            {positions.map((pos: any) => (
                 <div
                     key={pos.id}
                     className="flex w-full justify-between items-center py-4 border-b border-b-gray-300"
