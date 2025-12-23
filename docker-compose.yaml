@@ -1,4 +1,25 @@
 services:
+  setup:
+    image: alpine:latest
+    container_name: setup
+    volumes:
+      - ./:/project
+    working_dir: /project
+    command: |
+      sh -c '
+        echo "Checking environment files..."
+        if [ ! -f .env.postgres ] || [ ! -f api/.env ] || [ ! -f admin/.env ]; then
+          echo "Missing environment files. Creating them now..."
+          apk add --no-cache bash
+          chmod +x setup-env.sh
+          ./setup-env.sh
+        else
+          echo "All environment files exist"
+        fi
+      '
+    networks:
+      - app-network
+
   api:
     container_name: api
     build:
@@ -12,7 +33,28 @@ services:
       - ./api/src:/app/src
       - ./api/tsconfig.json:/app/tsconfig.json
     depends_on:
-      - postgres
+      setup:
+        condition: service_completed_successfully
+      migration:
+        condition: service_completed_successfully
+      localstack:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  migration:
+    container_name: migration
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    env_file:
+      - ./api/.env
+    command: npx drizzle-kit migrate
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
     networks:
       - app-network
 
@@ -33,6 +75,9 @@ services:
       timeout: 5s
       retries: 5
     restart: always
+    depends_on:
+      setup:
+        condition: service_completed_successfully
     networks:
       - app-network
 
@@ -45,9 +90,20 @@ services:
       - SERVICES=s3
       - AWS_DEFAULT_REGION=us-east-1
       - DEBUG=1
+      - PERSISTENCE=1
+      - DATA_DIR=/var/lib/localstack/data
     volumes:
-      - ./localstack:/var/lib/localstack
+      - localstack_data:/var/lib/localstack
+      - ./localstack-init:/etc/localstack/init/ready.d
       - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      setup:
+        condition: service_completed_successfully
     networks:
       - app-network
 
@@ -57,3 +113,4 @@ networks:
 
 volumes:
   postgres_data:
+  localstack_data:
