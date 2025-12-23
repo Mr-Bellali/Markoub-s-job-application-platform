@@ -6,7 +6,13 @@ export const API_ENDPOINTS = {
     POSITIONS: '/positions',
 
     // Admins endpoint
-    ADMINS: '/admins'
+    ADMINS: '/admins',
+
+    // Candidtaes endpoint
+    CANDIDATES: '/candidates',
+
+    // Applications endpoints
+    APPLICATIONS: '/applications',
 
 } as const;
 
