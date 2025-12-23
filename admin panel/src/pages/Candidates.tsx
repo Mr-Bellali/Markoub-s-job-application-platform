@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getPaginatedCandidates } from '../services/candidates';
 import DataGrid, { type Column } from '../components/shared/Datagrid';
@@ -15,7 +14,6 @@ type Candidate = {
 };
 
 const Candidates = () => {
-  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [limit] = useState(10);
 

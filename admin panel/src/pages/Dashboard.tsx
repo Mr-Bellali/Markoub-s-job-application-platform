@@ -1,5 +1,3 @@
-import { LayoutDashboard, Briefcase, Users, FileText } from 'lucide-react';
-
 const Dashboard = () => {
   const connectedAccount = JSON.parse(localStorage.getItem("auth_account") as string);
 
