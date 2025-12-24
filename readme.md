@@ -110,6 +110,6 @@ If you having a trouble to run the frontend like I do just comment ot in the doc
 
 ---
 
-## 🎯 Final Notes
+## Final Notes
 
 Thank you for reviewing this submission. I hope I meet your expectations.
