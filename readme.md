@@ -6,7 +6,7 @@
 
 ---
 
-## 🧠 Architectural Overview
+## Architectural Overview
 
 I chose a **monolithic architecture** for this project.
 
